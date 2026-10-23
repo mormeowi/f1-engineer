@@ -1,0 +1,253 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>F1 2020 — Инженер-стратег</title>
+<style>
+:root{--bg:#f2f3f6;--fg:#14161b;--cd:#fff;--mu:#6b7280;--ln:#dfe2e8;--ac:#e10600;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1014;--fg:#eceef2;--cd:#181b22;--mu:#9aa1ad;--ln:#2a2e38;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1014;--fg:#eceef2;--cd:#181b22;--mu:#9aa1ad;--ln:#2a2e38;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:70px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--cd);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--cd);border-bottom:2px solid var(--ac);padding:8px 12px;z-index:9}
+h1{font-size:17px;margin:0 0 6px}h3{margin:0 0 8px;font-size:15px}
+main,#chips{max-width:860px;margin:0 auto;padding:10px 12px}#chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+select,button{font:inherit;color:var(--fg);background:var(--cd);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;min-height:38px}
+button{cursor:pointer}button.on,.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}button.pr{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:600}
+.chip{white-space:nowrap;display:flex;align-items:center;gap:6px;flex:none;padding:6px 10px;min-height:34px}.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg>button{flex:1;padding:6px}
+.sl{display:grid;grid-template-columns:1fr auto;margin:6px 0;font-size:13px}.sl input{grid-column:1/3;width:100%;accent-color:var(--ac)}.sl b{font-variant-numeric:tabular-nums}
+.g{color:var(--mu);font-size:12px;text-transform:uppercase;margin:12px 0 2px;letter-spacing:.05em}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}td,th{padding:5px 3px;border-bottom:1px solid var(--ln);text-align:left}
+canvas{width:100%;display:block;border-radius:10px;background:var(--bg)}.mu{color:var(--mu);font-size:13px}.bad{color:var(--ac);font-weight:600}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--cd);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px);z-index:9}
+nav button{flex:1;border:0;border-radius:0;min-height:52px;background:none}nav button.on{background:none;color:var(--ac);font-weight:700;border-top:3px solid var(--ac)}
+.big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:12px;background:var(--ln);border-radius:6px;overflow:hidden;margin-bottom:4px}.bar i{display:block;height:100%;width:0}</style></head><body>
+<header><h1>🏎️ F1 2020 · Инженер-стратег</h1><div class="row"><select id="trk" onchange="S.tr=+this.value;go()"></select><button id="eqb" onclick="S.eq=!S.eq;go()"></button></div></header>
+<div id="chips"></div><div id="ti" class="mu" style="max-width:860px;margin:0 auto;padding:6px 12px 0"></div><main id="m"></main>
+<nav><button onclick="tab(0)">🔧 Болид</button><button onclick="tab(1)">📊 Стратегия</button><button onclick="tab(2)">⏱️ Тест</button></nav>
+<script>
+const $=id=>document.getElementById(id);
+// [название, км, круги, темп (с), потеря на пит-стоп, износ шин]
+const T=[['Австралия',5.303,58,80,21,1],['Бахрейн',5.412,57,93,23,1.3],['Вьетнам',5.607,55,91.5,22,1],['Китай',5.451,56,96,22,1.2],['Нидерланды',4.259,72,71.5,18,1.2],['Испания',4.655,66,79,22,1.3],['Монако',3.337,78,72,19,.7],['Азербайджан',6.003,51,102,20,.9],['Канада',4.361,70,73,18,.9],['Франция',5.842,53,91.5,22,1.2],['Австрия',4.318,71,65.5,20,1],['Великобритания',5.891,52,87,21,1.4],['Венгрия',4.381,70,77.5,20,1],['Бельгия',7.004,44,103,19,1],['Италия',5.793,53,81.5,24,.9],['Сингапур',5.063,61,99,26,1],['Россия',5.848,53,93,21,.8],['Япония',5.807,53,91.5,21,1.4],['США',5.513,56,96,20,1.1],['Мексика',4.304,71,78.5,21,.9],['Бразилия',4.309,71,71,21,1],['Абу-Даби',5.554,55,99,22,.9]];
+// % полного газа, прижим 1-5, повороты, DRS, лёгкость обгона 1-5 | контур (упрощённый)
+const TX=['66,3,14,2,3|30,82 55,84 78,80 90,66 86,52 74,46 80,32 70,18 50,14 30,18 16,30 14,46 24,58 18,70','70,3,15,3,4|8,60 60,60 74,54 66,44 80,36 92,46 88,66 72,76 56,68 44,78 28,72 16,80 8,72','72,2,23,3,4|10,70 60,70 80,64 90,50 80,38 62,42 54,30 66,18 46,12 30,22 40,34 24,44 14,56','63,3,16,2,4|20,70 70,72 85,62 78,50 62,48 50,56 42,46 54,36 68,34 80,24 66,14 40,16 24,26 14,40 28,52 20,60','62,4,14,2,2|30,78 60,80 82,70 86,54 74,42 60,48 50,36 62,22 44,14 26,22 16,38 22,54 14,66','63,4,16,2,2|14,60 60,62 80,58 86,46 74,38 60,42 52,32 66,22 50,14 34,22 38,34 24,40 16,50','40,5,19,1,1|84,24 70,18 56,24 44,36 34,34 24,44 30,56 20,66 34,76 48,70 60,76 74,70 84,58 78,46','75,1,20,2,4|10,70 80,70 90,60 90,42 78,36 66,40 60,28 46,26 40,16 26,14 22,24 14,34 10,48','70,2,14,2,4|12,72 78,72 90,60 82,48 66,52 50,42 70,30 80,20 60,14 30,18 16,28 24,42 14,56','66,3,15,2,3|14,60 58,64 76,60 86,48 78,36 64,42 54,30 68,18 50,12 34,22 40,34 26,40 14,48','70,2,10,2,4|20,76 78,70 90,52 70,44 74,28 56,16 38,24 28,40 12,52 14,68','68,3,18,2,4|20,64 50,70 72,66 84,54 76,42 62,46 56,36 68,26 52,16 34,20 28,32 14,36 10,50','55,5,14,1,1|30,72 60,74 80,66 84,52 70,46 58,52 46,44 56,32 72,28 76,16 56,12 38,20 28,34 18,46 20,60','75,2,19,2,4|30,84 40,66 28,58 38,46 24,36 38,24 60,14 80,22 70,36 84,48 72,60 54,56 46,70 52,82','80,1,11,2,4|10,72 70,72 78,66 84,60 88,48 80,36 60,30 40,24 22,20 12,32 20,46 14,58','50,5,23,3,2|20,78 52,78 54,66 76,66 80,54 62,50 60,36 78,32 80,18 52,16 46,28 26,28 20,44 34,52 18,60','68,2,18,2,3|14,70 50,72 70,66 82,52 74,40 58,34 66,22 48,14 30,20 24,32 36,42 22,52','66,4,18,1,2|12,70 52,74 76,66 84,52 66,44 50,52 36,44 30,30 46,20 66,26 78,40 60,60 34,58 18,48 20,60','62,3,20,2,4|10,72 40,70 46,50 30,42 40,28 60,24 74,34 86,26 90,40 76,52 84,64 66,72 50,82','60,4,17,3,3|10,60 76,60 88,54 86,42 72,40 62,48 50,40 56,28 72,24 60,14 34,14 24,26 18,40 22,52','66,3,15,2,4|70,76 50,80 34,72 24,60 34,48 52,52 64,44 54,32 38,26 26,34 20,48 16,36 28,18 50,14 78,22 86,40 78,60','62,3,16,2,4|14,66 60,68 78,60 88,48 80,38 66,42 56,32 42,38 36,24 20,24 12,38 18,52'];
+T.forEach((t,i)=>{const[a,b]=TX[i].split('|');t.push(...a.split(',').map(Number),b)});
+const pwr=i=>Math.min(.46,Math.max(.2,.2+(T[i][6]-40)*.0065));
+const tinfo=i=>{const t=T[i];return `${t[1]} км · ${t[8]} поворотов · DRS: ${t[9]} · полный газ ${t[6]}% · прижим ${t[7]}/5 · износ шин ${t[5]} · обгоны ${t[10]}/5`};
+// F1: [команда, двигатель, аэро, шасси, надёжность, цвет]; F2: [команда, уровень, цвет]
+const SER={
+f1:{n:'F1 2020',s:'F1 20',k:1,b:1.75,x:110,t:[['Mercedes',98,100,96,92,'#00d2be'],['Red Bull',88,92,92,84,'#1e41ff'],['McLaren',82,82,84,82,'#ff8700'],['Racing Point',94,85,84,80,'#f596c8'],['Renault',78,80,80,76,'#fff500'],['Ferrari',76,84,82,70,'#dc0000'],['AlphaTauri',82,76,76,76,'#4e7c9b'],['Alfa Romeo',74,72,74,72,'#9b0000'],['Haas',74,70,72,70,'#9ea3a8'],['Williams',90,58,62,74,'#00a0de']]},
+f2:{n:'F2 2020',s:'F2 20',k:1.115,b:1.15,x:80,t:[['Prema',90,'#d4141c'],['UNI-Virtuosi',88,'#1f3f8f'],['Carlin',86,'#00a859'],['Hitech',84,'#e7c500'],['ART',82,'#b0b4ba'],['Campos',80,'#f26522'],['MP Motorsport',80,'#ff3d9a'],['DAMS',78,'#0097d6'],['Charouz',76,'#8bc34a'],['Trident',74,'#7b1fa2']]},
+f19:{n:'F2 2019',s:'F2 19',k:1.12,b:1.15,x:80,t:[['Prema',90,'#d4141c'],['Carlin',88,'#00a859'],['UNI-Virtuosi',86,'#1f3f8f'],['ART',84,'#b0b4ba'],['DAMS',82,'#0097d6'],['MP Motorsport',80,'#ff3d9a'],['Campos',78,'#f26522'],['Trident',76,'#7b1fa2'],['Charouz',74,'#8bc34a'],['HWA',70,'#555b63']]}};
+// [ключ, название, мин, макс, шаг, по умолчанию, группа]
+const SU=[['fw','Переднее крыло',0,50,1,25,'Аэродинамика'],['rw','Заднее крыло',0,50,1,25],['dn','Дифференциал на газу, %',10,100,5,60,'Трансмиссия'],['df','Дифференциал без газа, %',10,100,5,50],['fc','Развал спереди',-3.5,-2.5,.1,-3,'Геометрия'],['rc','Развал сзади',-2,-1,.1,-1.5],['ft','Схождение спереди',0,.5,.01,.05],['rt','Схождение сзади',.1,.5,.01,.2],['fs','Подвеска спереди',1,11,1,6,'Подвеска'],['rs','Подвеска сзади',1,11,1,6],['fa','Стабилизатор спереди',1,11,1,6],['ra','Стабилизатор сзади',1,11,1,6],['fh','Клиренс спереди',10,40,1,25],['rh','Клиренс сзади',40,100,1,70],['bp','Давление тормозов, %',80,100,1,90,'Тормоза и шины'],['bb','Баланс тормозов, %',50,70,1,58],['pfl','Давление шин ПЛ, psi',22.5,29.5,.1,25],['pfr','Давление шин ПП, psi',22.5,29.5,.1,25],['prl','Давление шин ЗЛ, psi',20.5,26.5,.1,22.5],['prr','Давление шин ЗП, psi',20.5,26.5,.1,22.5]];
+const CP={S:{o:0,d:.09,l:16,c:'#e53935',n:'Софт'},M:{o:.7,d:.05,l:26,c:'#fdd835',n:'Медиум'},H:{o:1.3,d:.028,l:40,c:'#cfd3d8',n:'Хард'}};
+const S={cars:[],a:0,tr:0,eq:false,pct:100,tab:0,tc:'S',fuel:10,spd:5,run:false,tm:0,cam:true};let uid=0,last=0;
+const hs=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0)/4294967296};
+const mul=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const fmt=t=>{const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return(h?h+':'+String(m).padStart(2,'0'):m)+':'+s.toFixed(3).padStart(6,'0')};
+const cl=(v,a,b)=>Math.min(b,Math.max(a,v));
+const stats=(s,i)=>{const t=SER[s].t[i];return s=='f1'?t.slice(1,5):[80,t[1],t[1],t[1]]};
+const col=c=>{const t=SER[c.s].t[c.t];return t[t.length-1]};
+const lab=c=>SER[c.s].s+' '+SER[c.s].t[c.t][0];
+const mk=(s,i)=>({id:++uid,s,t:i,st:stats(s,i),su:Object.fromEntries(SU.map(d=>[d[0],d[5]])),str:{c:['M','H'],f:[.45]}});
+const cur=()=>S.cars[S.a];const hp=c=>c.s=='f1'?Math.round(760+2.5*eff(c)[0]):620;const eff=c=>S.eq?[80,80,80,80]:c.st;
+const nL=()=>Math.max(3,Math.round(T[S.tr][2]*S.pct/100));
+const ideal=(d,i)=>d[0]=='fw'||d[0]=='rw'?cl(8+T[i][7]*7,0,50):cl(d[5]+(hs(T[i][0]+d[0])-.5)*.3*(d[3]-d[2]),d[2],d[3]);
+function pen(c,i){let s=0;for(const d of SU)s+=Math.abs(c.su[d[0]]-ideal(d,i))/(d[3]-d[2]);return s*.8*T[i][3]/90}
+function base(c,i){const w=pwr(i),e=eff(c),sc=e[0]*w+e[1]*(.8-w)+e[2]*.2;return T[i][3]*SER[c.s].k*(1+(100-sc)*.0006)+pen(c,i)}
+const tyre=(k,m,tr)=>{const p=CP[m],L=p.l/tr[5];return(p.o+p.d*tr[5]*k+(k>L?(k-L)*.22:0))*tr[3]/90};
+function race(b,tr,N,cs,p,c){const Q=SER[c.s],F=Math.min(Q.x,N*Q.b+2);let t=0,si=0,k=0;const l=[];for(let i=0;i<N;i++){let x=b+tyre(k++,cs[si],tr)+Math.max(0,F-Q.b*i)*.03+(i?0:3+c.grid*.15*(6-tr[10])/3);if(si<p.length&&i+1==p[si]){x+=tr[4];si++;k=0}l.push(x);t+=x}return{l,t}}
+const pits=(c,N)=>c.str.f.map(f=>cl(Math.round(f*N),3,N-3));
+const noCar=()=>$('m').innerHTML='<div class="card">Добавьте болид во вкладке «Болид».</div>';
+const sl=(l,k,v,a,b,s,fn,dis)=>`<label class="sl"><span>${l}</span><b>${v}</b><input type="range" data-k="${k}" min="${a}" max="${b}" step="${s}" value="${v}"${dis?' disabled':''} oninput="${fn}(this)"></label>`;
+const opts=(a,sel)=>a.map((x,i)=>`<option value="${i}"${i==sel?' selected':''}>${x}</option>`).join('');
+// ---------- Болид ----------
+function r0(){const c=cur();let h=`<div class="card"><h3>Добавить болид</h3><div class="row"><select id="ns" onchange="nt()">${Object.keys(SER).map(k=>`<option value="${k}">${SER[k].n}</option>`).join('')}</select><select id="nm"></select><button class="pr" onclick="addC()">＋ Добавить</button></div></div>`;
+if(c){const e=eff(c);h+=`<div class="card"><h3>${lab(c)}</h3><div class="row"><select onchange="chT(+this.value)">${opts(SER[c.s].t.map(t=>t[0]),c.t)}</select><button onclick="dup()">Копия</button><button onclick="del()">Удалить</button></div>
+<p class="mu" id="inf"></p><div class="g">Характеристики болида${S.eq?' (равная мощность: значения команд не учитываются, настройки сохраняются)':''}</div>`+['Силовая установка','Аэродинамика','Шасси','Надёжность'].map((n,i)=>sl(n,i,e[i],40,100,1,'stt',S.eq)).join('')+`<div class="row" style="margin-top:8px"><button class="pr" onclick="autoSu()">⚙️ Подобрать настройки под трассу</button><button onclick="rstSu()">Сбросить</button></div>`;
+for(const d of SU)h+=(d[6]?`<div class="g">${d[6]}</div>`:'')+sl(d[1],d[0],c.su[d[0]],d[2],d[3],d[4],'sus');h+='</div>'}
+$('m').innerHTML=h;nt();inf()}
+function nt(){const s=$('ns').value;$('nm').innerHTML=opts(SER[s].t.map(t=>t[0]),0)}
+const norm=()=>[...S.cars].sort((a,b)=>a.grid-b.grid).forEach((c,i)=>c.grid=i);
+function addC(){const c=mk($('ns').value,+$('nm').value);c.grid=999;S.cars.push(c);norm();S.a=S.cars.length-1;go()}
+function chT(i){const c=cur();c.t=i;c.st=stats(c.s,i);go()}
+function dup(){const c=cur(),n=JSON.parse(JSON.stringify(c));n.id=++uid;n.grid=999;S.cars.push(n);norm();S.a=S.cars.length-1;go()}
+function del(){S.cars.splice(S.a,1);norm();S.a=Math.max(0,S.a-1);go()}
+function stt(e){cur().st[+e.dataset.k]=+e.value;e.previousElementSibling.textContent=e.value;inf()}
+function sus(e){cur().su[e.dataset.k]=+e.value;e.previousElementSibling.textContent=e.value;inf()}
+function autoSu(){const c=cur();for(const d of SU)c.su[d[0]]=+(Math.round(ideal(d,S.tr)/d[4])*d[4]).toFixed(2);r0()}
+function rstSu(){const c=cur();for(const d of SU)c.su[d[0]]=d[5];r0()}
+function inf(){const c=cur(),e=$('inf');if(!c||!e)return;e.textContent=`${T[S.tr][0]}: чистый круг ≈ ${fmt(base(c,S.tr))} · потери из-за настроек +${pen(c,S.tr).toFixed(2)} с · мощность ≈ ${hp(c)} л.с.`}
+// ---------- Стратегия ----------
+function r1(){const c=cur();if(!c)return noCar();const N=nL(),st=c.str,p=pits(c,N),n=st.f.length;
+let h=`<div class="card"><h3>Дистанция гонки</h3><div class="seg">${[25,35,50,100].map(x=>`<button${S.pct==x?' class="on"':''} onclick="S.pct=${x};r1()">${x}% · ${Math.max(3,Math.round(T[S.tr][2]*x/100))} кр.</button>`).join('')}</div></div>
+<div class="card"><h3>Пит-стопы: ${lab(c)}</h3><div class="seg">${[0,1,2,3].map(x=>`<button${n==x?' class="on"':''} onclick="stops(${x})">${x}</button>`).join('')}</div>`;
+for(let j=0;j<=n;j++){h+=`<div class="g">Стинт ${j+1}</div><div class="seg">${'SMH'.split('').map(m=>`<button${st.c[j]==m?' class="on"':''} onclick="comp(${j},'${m}')">${CP[m].n}</button>`).join('')}</div>`;
+if(j<n)h+=sl('Заезд на пит-стоп, круг','pit'+j,p[j],3,N-3,1,'pit').replace('data-k="pit'+j+'"','data-k="'+j+'"')}
+h+=`<button class="pr" style="width:100%;margin-top:12px" onclick="autoS()">⚡ Найти оптимальную стратегию</button></div><div id="out"></div>`;$('m').innerHTML=h;out()}
+function stops(n){const st=cur().str;while(st.c.length<n+1)st.c.push('H');st.c.length=n+1;st.f=[...Array(n)].map((_,j)=>(j+1)/(n+1));r1()}
+function comp(j,m){cur().str.c[j]=m;r1()}
+function pit(e){const c=cur(),N=nL(),p=pits(c,N),j=+e.dataset.k,v=cl(+e.value,(j?p[j-1]:0)+3,(j<p.length-1?p[j+1]:N)-3);e.value=v;e.previousElementSibling.textContent=v;c.str.f[j]=v/N;out()}
+function autoS(){const c=cur(),tr=T[S.tr],N=nL(),b=base(c,S.tr);let best=null;
+for(let n=1;n<=3;n++){const stp=n==3?Math.max(2,Math.round(N/18)):n==2?2:1,cs=[],ps=[];
+(function g(a){if(a.length==n+1)return cs.push(a);for(const m of 'SMH')g([...a,m])})([]);
+(function g(a,s){if(a.length==n)return ps.push(a);for(let p=s;p<=N-3;p+=stp)g([...a,p],p+4)})([],4);
+for(const a of cs){if(new Set(a).size<2)continue;for(const p of ps){const t=race(b,tr,N,a,p,c).t;if(!best||t<best.t)best={t,a,p}}}}
+if(best){c.str={c:best.a,f:best.p.map(p=>p/N)};r1()}}
+function out(){const c=cur(),tr=T[S.tr],N=nL(),p=pits(c,N),r=race(base(c,S.tr),tr,N,c.str.c,p,c),e=eff(c),ok=new Set(c.str.c).size>1;
+const rows=S.cars.map(x=>{const q=pits(x,N);return{x,t:race(base(x,S.tr),tr,N,x.str.c,q,x).t}}).sort((a,b)=>a.t-b.t);
+$('out').innerHTML=`<div class="card"><div class="mu">Время гонки · ${tr[0]} · ${N} кр.</div><div class="big">${fmt(r.t)}</div>
+<div class="mu">Средний круг ${fmt(r.t/N)} · пит-стопы ${p.length}×${tr[4]} с · риск отказа ≈ ${((100-e[3])*.15*N/60).toFixed(1)}%</div>
+${ok?'':'<div class="bad">В сухой гонке нужно минимум два разных состава шин</div>'}<canvas id="cv"></canvas>
+<div class="mu">Время круга по ходу гонки (пики пит-стопов обрезаны), фон — состав шин</div></div>
+<div class="card"><h3>Сравнение болидов в гараже</h3><table>${rows.map((q,i)=>`<tr><td>${i+1}</td><td><span style="color:${col(q.x)}">●</span> ${lab(q.x)}</td><td>${fmt(q.t)}</td><td>${i?'+'+(q.t-rows[0].t).toFixed(1)+' с':''}</td></tr>`).join('')}</table></div>`;
+const cv=$('cv'),w=cv.width=cv.clientWidth,h=cv.height=150,x=cv.getContext('2d'),mn=Math.min(...r.l),mx=mn+6,ed=[0,...p,N];
+for(let j=0;j<ed.length-1;j++){x.globalAlpha=.3;x.fillStyle=CP[c.str.c[j]].c;x.fillRect(ed[j]/N*w,0,(ed[j+1]-ed[j])/N*w,h)}
+x.globalAlpha=1;x.strokeStyle=getComputedStyle(document.body).color;x.lineWidth=2;x.beginPath();
+r.l.forEach((v,i)=>{const X=(i+.5)/N*w,Y=h-8-(Math.min(v,mx)-mn)/(mx-mn)*(h-16);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke()}
+// ---------- Тест скорости ----------
+// Контуры: реальные координаты трасс (проект bacinger/f1-circuits, MIT), прорежены. Формат: широта°|x,y (в 1e-4°)
+const GEO={
+0:'37|9686,-8498 6612,-8478 6532,-8457 6353,-8441 6214,-8423 6368,-8418 6369,-8403 6514,-8390 6797,-8380 7042,-8388 7153,-8402 7181,-8415 7096,-8429 7061,-8448 7154,-8468 7402,-8481 7690,-8494 7851,-8527 7859,-8531 7622,-8539 7469,-8527 7415,-8521 7265,-8529',
+1:'26|5105,317 5107,368 5117,364 5129,366 5181,357 5184,355 5165,337 5158,330 5146,329 5135,316 5131,319 5135,345 5128,353 5124,319 5123,292 5128,287 5140,292 5147,304 5157,308 5170,302 5175,297 5109,261 5103,267 5104,294',
+3:'31|2184,3368 2168,3367 2162,3374 2164,3380 2171,3380 2172,3378 2171,3372 2174,3371 2177,3373 2179,3378 2177,3382 2170,3389 2158,3400 2152,3414 2150,3421 2153,3422 2160,3416 2170,3402 2175,3397 2181,3395 2188,3396 2194,3400 2198,3408 2202,3411 2208,3412 2212,3410 2217,3402 2221,3401 2227,3408 2216,3425 2202,3444 2197,3441 2192,3442 2189,3447 2191,3453 2198,3455 2206,3453 2210,3448 2233,3419 2254,3391 2278,3361 2274,3359 2253,3382 2230,3378',
+4:'52|5405,3884 5421,3908 5432,3918 5438,3914 5431,3904 5429,3893 5425,3889 5415,3887 5412,3884 5416,3881 5433,3884 5449,3885 5462,3883 5475,3884 5486,3888 5498,3890 5517,3889 5527,3886 5531,3880 5528,3874 5518,3866 5512,3858 5506,3857 5494,3858 5485,3862 5482,3865 5487,3868 5502,3870 5510,3873 5511,3878 5494,3881 5471,3880 5454,3877 5440,3873 5433,3871 5428,3874 5421,3874 5420,3872 5426,3850 5423,3845 5408,3844 5396,3845 5389,3851 5387,3855 5389,3860',
+5:'41|2612,5700 2589,5673 2571,5652 2564,5646 2552,5649 2541,5643 2529,5643 2523,5649 2521,5653 2523,5660 2541,5683 2547,5684 2554,5676 2551,5670 2540,5656 2546,5653 2562,5659 2577,5672 2571,5679 2560,5697 2565,5706 2617,5726 2620,5730 2610,5734 2597,5729 2589,5734 2605,5746 2621,5744 2637,5731 2635,5727',
+6:'43|4272,7394 4276,7400 4286,7410 4289,7411 4291,7408 4295,7403 4296,7402 4297,7403 4293,7407 4298,7410 4302,7411 4304,7410 4303,7404 4301,7394 4294,7385 4284,7379 4273,7375 4262,7373 4252,7370 4237,7369 4225,7368 4221,7366 4218,7361 4218,7356 4222,7352 4224,7343 4222,7338 4225,7332 4231,7328 4235,7326 4230,7324 4225,7324 4224,7327 4219,7332 4215,7341 4213,7350 4212,7357 4213,7364 4215,7367 4220,7370 4229,7371 4242,7374 4251,7375 4264,7379 4273,7380 4278,7388 4275,7391',
+8:'45|-5232,5018 -5227,5001 -5226,4991 -5228,4979 -5219,4974 -5223,4971 -5234,4972 -5246,4976 -5259,4985 -5260,4987 -5259,4991 -5270,5000 -5276,5004 -5281,5010 -5281,5025 -5285,5028 -5294,5029 -5297,5033 -5299,5050 -5298,5068 -5292,5085 -5281,5092 -5274,5114 -5273,5125 -5277,5141 -5274,5143 -5271,5135 -5268,5128 -5254,5104 -5235,5043 -5238,5037 -5235,5026',
+9:'43|7916,2520 7961,2495 7965,2504 7977,2507 7984,2502 8002,2497 8018,2500 8029,2498 8021,2486 8015,2480 8016,2473 8026,2470 8037,2476 8037,2499 8032,2508 8015,2515 7990,2522 7949,2536 7939,2542 7932,2538 7881,2551 7821,2568 7809,2571 7800,2583 7789,2586 7782,2577 7792,2576 7798,2572 7800,2566 7816,2560 7843,2546 7859,2542 7868,2546 7896,2531',
+10:'47|7651,2200 7611,2193 7592,2210 7580,2223 7569,2239 7541,2261 7559,2264 7581,2262 7606,2259 7643,2257 7646,2255 7629,2244 7597,2246 7586,2238 7598,2223 7613,2223 7633,2231 7665,2232 7693,2232 7700,2229 7706,2215 7694,2208',
+11:'52|-153,789 -126,789 -109,780 -104,765 -100,740 -95,735 -100,724 -93,709 -114,695 -153,651 -167,638 -176,635 -195,648 -220,665 -230,662 -242,671 -243,676 -207,705 -186,713 -158,714 -138,724 -125,715 -114,723 -116,732 -184,770 -200,768 -202,760 -217,761 -206,777 -186,786',
+12:'47|2459,5803 2424,5821 2440,5825 2474,5809 2484,5812 2477,5824 2497,5854 2506,5863 2500,5878 2507,5885 2521,5880 2536,5868 2538,5853 2552,5849 2558,5844 2555,5832 2565,5818 2566,5815 2550,5800 2532,5787 2511,5799 2502,5796 2519,5785 2518,5777 2506,5777',
+13:'50|9650,4443 9638,4462 9668,4451 9703,4426 9719,4416 9735,4394 9757,4356 9776,4315 9767,4307 9768,4293 9733,4277 9723,4279 9741,4291 9737,4307 9727,4337 9707,4342 9690,4336 9680,4320 9664,4304 9648,4307 9624,4289 9600,4295 9596,4302 9607,4318 9631,4331 9660,4342 9671,4351 9681,4369 9669,4390 9664,4414 9673,4418 9665,4426',
+14:'45|2812,6190 2819,6244 2821,6263 2825,6282 2840,6294 2867,6299 2912,6302 2930,6308 2955,6314 2964,6311 2969,6287 2950,6277 2919,6264 2873,6236 2859,6225 2858,6217 2851,6212 2847,6195 2837,6127 2827,6119 2812,6125 2807,6139 2808,6162',
+15:'1|8641,2917 8644,2898 8639,2887 8616,2889 8612,2894 8573,2898 8553,2911 8547,2905 8539,2867 8534,2869 8524,2881 8516,2891 8523,2907 8531,2921 8536,2926 8548,2915 8553,2922 8559,2931 8585,2916 8624,2913 8629,2918 8624,2936 8625,2948 8630,2946 8638,2944 8640,2931',
+16:'43|9681,4097 9660,4077 9606,4066 9579,4060 9562,4074 9539,4077 9524,4062 9533,4043 9490,4022 9474,4040 9476,4057 9512,4062 9517,4071 9506,4093 9524,4100 9562,4099 9600,4087 9637,4088 9648,4078 9661,4085 9660,4097 9668,4110 9683,4127 9700,4122',
+17:'34|5403,8433 5432,8405 5434,8400 5427,8390 5411,8405 5398,8408 5392,8419 5376,8423 5370,8430 5374,8443 5362,8450 5345,8449 5327,8433 5310,8431 5303,8455 5303,8464 5306,8470 5302,8471 5291,8457 5272,8454 5252,8461 5240,8477 5230,8484 5219,8478 5230,8466 5257,8454 5300,8442 5324,8442 5343,8456 5353,8457 5365,8461 5379,8457 5384,8452',
+18:'30|-6397,1318 -6379,1306 -6367,1302 -6373,1316 -6371,1324 -6352,1335 -6342,1346 -6336,1355 -6330,1361 -6313,1358 -6299,1366 -6289,1362 -6271,1365 -6259,1377 -6246,1390 -6246,1395 -6267,1389 -6323,1378 -6363,1374 -6357,1362 -6356,1355 -6367,1362 -6376,1366 -6371,1354 -6369,1343 -6380,1336 -6392,1340 -6405,1355 -6433,1346 -6435,1344 -6422,1335',
+19:'19|-943,4062 -887,4055 -841,4049 -834,4046 -835,4041 -831,4037 -835,4024 -861,3984 -857,3979 -867,3970 -869,3973 -865,3999 -874,4007 -880,4014 -895,4017 -899,4025 -917,4033 -949,4037 -952,4052 -958,4051 -969,4054 -965,4061 -957,4064',
+20:'23|-6999,-7037 -6991,-7063 -6984,-7062 -6976,-7061 -6964,-7062 -6956,-7054 -6948,-7025 -6940,-6999 -6953,-6993 -6963,-6998 -6976,-7014 -6987,-7024 -6998,-7018 -6999,-7009 -6993,-7007 -6987,-7007 -6986,-7002 -6994,-6994 -6995,-6984 -6988,-6988 -6974,-6993 -6967,-6985 -6961,-6976 -6971,-6970 -6987,-6973 -6996,-6978 -7000,-6988 -7004,-7004 -7004,-7018',
+21:'24|6055,4700 6078,4703 6081,4706 6073,4727 6060,4733 6057,4738 6061,4755 6057,4783 6051,4785 6036,4742 6025,4711 6016,4687 6025,4677 6033,4663 6053,4649 6085,4633 6094,4634 6096,4638 6091,4645 6067,4648 6056,4654 6053,4665 6063,4667 6065,4677 6057,4679 6036,4677 6029,4686 6026,4695'};
+const PC={};
+function path(i){if(PC[i])return PC[i];let P;
+if(GEO[i]){const[a,b]=GEO[i].split('|'),k=Math.cos(+a*Math.PI/180);P=b.split(' ').map(s=>{const[x,y]=s.split(',').map(Number);return[x*k,-y]})}
+else P=T[i][11].split(' ').map(s=>s.split(',').map(Number));
+const n=P.length,o=[];
+for(let k=0;k<n;k++){const a=P[(k+n-1)%n],b=P[k],c=P[(k+1)%n],d=P[(k+2)%n];for(let t=0;t<20;t++){const u=t/20,u2=u*u,u3=u2*u;o.push([0,1].map(z=>.5*(2*b[z]+(-a[z]+c[z])*u+(2*a[z]-5*b[z]+4*c[z]-d[z])*u2+(-a[z]+3*b[z]-3*c[z]+d[z])*u3)))}}
+return PC[i]=o}
+// профиль скорости: кривизна -> предел скорости, разгон/торможение, зоны DRS и точки торможения
+const PF={};
+function prof(i){if(PF[i])return PF[i];const P=path(i),n=P.length,tr=T[i],Lm=tr[1]*1000,sg=[];let tot=0;
+for(let k=0;k<n;k++){const a=P[k],b=P[(k+1)%n],d=Math.hypot(b[0]-a[0],b[1]-a[1])||1e-9;sg.push(d);tot+=d}
+const ds=sg.map(d=>d/tot*Lm),D=[0];ds.forEach((d,k)=>D.push(D[k]+d));
+const vt=240+(tr[6]-40)*2.25,u=[];
+for(let k=0;k<n;k++){const a=P[(k+n-1)%n],b=P[k],c=P[(k+1)%n],g=Math.atan2(c[1]-b[1],c[0]-b[0])-Math.atan2(b[1]-a[1],b[0]-a[0]),an=Math.abs(Math.atan2(Math.sin(g),Math.cos(g))),cu=an/((ds[(k+n-1)%n]+ds[k])/2);u.push(Math.max(17,Math.min(vt/3.6,Math.sqrt(30/Math.max(cu,1e-5)))))}
+for(let r=0;r<3;r++){for(let k=0;k<n;k++){const j=(k+1)%n;u[j]=Math.min(u[j],Math.sqrt(u[k]*u[k]+16*ds[k]))}for(let k=n-1;k>=0;k--){const j=(k+1)%n;u[k]=Math.min(u[k],Math.sqrt(u[j]*u[j]+90*ds[k]))}}
+let T0=0;const cm=[0];for(let k=0;k<n;k++){T0+=ds[k]/u[k];cm.push(T0)}
+const dr=Array(n).fill(0),bp=Array(n).fill(0),runs=[];let s0=-1;
+for(let k=0;k<=n;k++){const hi=k<n&&u[k]>.93*vt/3.6;if(hi&&s0<0)s0=k;if(!hi&&s0>=0){runs.push([s0,k,D[k]-D[s0]]);s0=-1}}
+runs.sort((a,b)=>b[2]-a[2]).slice(0,tr[9]).forEach(r=>{for(let k=r[0];k<r[1];k++)dr[k]=1});
+for(let k=0;k<n;k++){const p=(k+n-1)%n,j=(k+1)%n;if(u[j]<u[k]-.05&&u[p]<=u[k]+.05){let m=j,c=0;while(u[(m+1)%n]<u[m]-.02&&c++<n)m=(m+1)%n;const d=(u[k]-u[m])*3.6;if(d>30)bp[k]=Math.min(1.3,d/110)}}
+const og=[];for(let k=0;k<n;k++){const a=P[(k+n-1)%n],b=P[k],c=P[(k+1)%n],g=Math.atan2(c[1]-b[1],c[0]-b[0])-Math.atan2(b[1]-a[1],b[0]-a[0]);og.push(Math.atan2(Math.sin(g),Math.cos(g)))}
+let off=og.map(g=>Math.max(-1,Math.min(1,g*14)));for(let r=0;r<3;r++)off=off.map((_,k)=>{let t=0;for(let j=-12;j<=12;j++)t+=off[(k+j+n)%n];return t/25});const mo=Math.max(...off.map(Math.abs))||1;off=off.map(v=>v/mo);
+const pf={n,Lm,D,ds,u,cm,T0,dr,bp,vt,off};const tA=x=>{const k=kAt(pf,x);return cm[k]+(x-D[k])/ds[k]*(cm[k+1]-cm[k])};
+const s1=tA(Lm/3),s2=tA(2*Lm/3)-s1;pf.sh=[s1/T0,s2/T0,(T0-s1-s2)/T0];return PF[i]=pf}
+const kAt=(p,x)=>{x=(x%p.Lm+p.Lm)%p.Lm;let a=0,b=p.n-1;while(a<b){const m=(a+b+1)>>1;if(p.D[m]<=x)a=m;else b=m-1}return a};
+const tLap=c=>base(c,S.tr)+tyre(1,S.tc,T[S.tr])+S.fuel*.03;
+const tres=()=>S.cars.map(c=>({c,t:tLap(c)})).sort((a,b)=>a.t-b.t);
+const sf=t=>t?t.toFixed(3):'—';
+function simInit(){const pf=prof(S.tr);S.sim={t:0,log:[],cs:tres().map(q=>({c:q.c,lt:q.t,lt0:q.t,m:pf.T0/q.t,s:-(q.c.grid*30+10),v:0,pv:0,k:0,lp:0,ts:0,sec:-1,st:0,sc:[0,0,0],ls:[0,0,0],last:0,best:0,er:70,th:0,br:0,gr:1,dr:0,dp:0,comp:S.tc,age:1,wr:0,s0:0,pit:0,req:false,pin:0,pl:0,stT:0,stS:0,stC:0,bs:0,ei:0,ex:0,lw:.4+hs('w'+q.c.id)*.3}))};S.kx=null}
+const nc=c=>{const l=c.c.str.c;const n=l[(l.indexOf(c.comp)+1)%l.length];return n==c.comp?(n=='H'?'M':'H'):n};
+function step(dt){const z=S.sim,pf=prof(S.tr),L=pf.Lm,tr=T[S.tr],e=tr[10],EI=L-350,ord=[...z.cs].sort((a,b)=>b.s-a.s);z.t+=dt;
+ord.forEach((c,r)=>{let ah=null;if(!c.pit)for(let j=r-1;j>=0;j--)if(!ord[j].pit){ah=ord[j];break}
+const k=kAt(pf,c.s),f1=c.c.s=='f1',ph=(c.s%L+L)%L,lap=Math.floor(c.s/L),life=CP[c.comp].l/tr[5];
+c.age=1+Math.max(0,(c.s-c.s0)/L);c.wr=Math.min(100,Math.round(c.age/life*100));c.m=pf.T0/(c.lt0+tyre(c.age,c.comp,tr)-tyre(1,S.tc,tr));
+if(!c.pit&&!c.req&&c.s>0&&c.wr>=80)c.req=true;
+if(c.req&&!c.pit&&c.s>0&&ph>=EI&&ph<L-40){c.pit=1;c.pin=z.t;c.ei=lap*L+EI;c.bs=(lap+1)*L+30+(c.c.t%10)*20+(c.c.id%2)*8;c.ex=(lap+1)*L+430;c.stS=f1?2+Math.random()*1.2:5.5+Math.random()*2}
+let tv=pf.u[c.s<0?0:k]*3.6*c.m;c.dr=0;
+if(c.pit===1){const rem=c.bs-c.s;tv=Math.min(80,3.6*Math.sqrt(14*Math.max(0,rem)));if(rem<.5){c.pit=2;c.stC=0}}
+else if(c.pit===2){tv=0;c.stC+=dt;if(c.stC>=c.stS){c.stT=c.stS;c.comp=nc(c);c.s0=c.s;c.pit=3}}
+else if(c.pit===3){tv=80;if(c.s>=c.ex){c.pit=0;c.req=false;c.pl=z.t-c.pin}}
+if(ah){const g=ah.s-c.s;if(pf.dr[k]&&c.s>L&&g/Math.max(c.v/3.6,20)<1){c.dr=1;tv*=1.025}if(g<16)tv=Math.min(tv,ah.v+2)}
+if(k!==c.k){if(ah&&pf.bp[k]&&c.s>0){const g=ah.s-c.s;if(g<40&&c.v>ah.v-8){const pa=c.m/ah.m-1,p=Math.max(0,Math.min(.9,e*e/25*pf.bp[k]*(.05+pa*25+(c.dr?.3:0)+(f1&&c.er>25?.1:0))));if(Math.random()<p){z.log.unshift(`${Math.max(1,c.lp)} кр.: ${lab(c.c)} обгоняет ${lab(ah.c)}`);z.log.length=Math.min(z.log.length,5);c.s=ah.s+5;c.v=Math.max(c.v,ah.v)}}}c.k=k}
+c.pv=c.v;c.v=tv>c.v?Math.min(tv,c.v+29*dt):Math.max(tv,c.v-160*dt);if(c.pit===2)c.v=0;c.s+=c.v/3.6*dt;
+const a=(c.v-c.pv)/dt,br=a<-6?Math.min(100,-a/1.6):0;let th;if(br)th=0;else if(c.pit)th=c.pit===2?0:55;else if(tv>c.v+1)th=100;else th=c.v>=pf.vt*.96?100:35+c.v/pf.vt*45;
+c.br=c.br*.6+br*.4;c.th=c.th*.6+th*.4;
+c.gr=(f1?[0,70,105,145,185,225,265,300]:[0,60,100,150,200,250]).filter(x=>c.v>=x).length||1;
+if(f1){c.dp=c.th>90&&c.v>110&&c.er>0&&!c.pit?1:0;if(c.dp)c.er=Math.max(0,c.er-dt*100/22);if(br>10)c.er=Math.min(100,c.er+dt*100/26);else if(c.th<60&&!c.dp)c.er=Math.min(100,c.er+dt*100/160)}
+const sn=c.s<0?-1:Math.floor((c.s%L)/(L/3));
+if(sn!==c.sec){if(c.sec>=0)c.sc[c.sec]=z.t-c.st;if(c.sec===2&&sn===0){c.last=z.t-c.ts;c.ts=z.t;c.ls=[...c.sc];if(!c.best||c.last<c.best)c.best=c.last;c.lp++}if(c.sec===-1){c.ts=z.t;c.lp=1}c.st=z.t;c.sec=sn}})}
+function r2(){if(!S.cars.length)return noCar();const tr=T[S.tr],pf=prof(S.tr),rs=tres(),key=S.tr+'|'+rs.map(q=>q.c.id+':'+q.c.grid+':'+q.t.toFixed(3)).join();if(S.key!=key){S.key=key;S.run=false;simInit()}
+const c=cur(),f1=c.s=='f1',gs=[...S.cars].sort((a,b)=>a.grid-b.grid);
+$('m').innerHTML=`<div class="card"><h3>Тест скорости: ${tr[0]}</h3><div class="seg">${'SMH'.split('').map(m=>`<button${S.tc==m?' class="on"':''} onclick="S.tc='${m}';r2()">${CP[m].n}</button>`).join('')}</div>
+<label class="sl"><span>Топливо, кг</span><b>${S.fuel}</b><input type="range" min="5" max="110" step="1" value="${S.fuel}" oninput="this.previousElementSibling.textContent=this.value" onchange="S.fuel=+this.value;r2()"></label>
+<div class="seg">${[1,5,20].map(x=>`<button${S.spd==x?' class="on"':''} onclick="S.spd=${x};r2()">${x}×</button>`).join('')}<button id="rb" class="pr" onclick="runT()">${S.run?'⏸ Пауза':'▶ Старт'}</button><button onclick="simInit();draw()">↺ Сброс</button><button onclick="S.cam=!S.cam;S.cx=null;S.sc=null;draw();r2()">📹 ${S.cam?'За болидом':'Вся трасса'}</button></div></div>
+<div class="card"><canvas id="tc"></canvas><div class="mu">Камера следует за выбранным болидом (выбор — чипы сверху); кнопка 📹 переключает на всю трассу. Белая черта — старт/финиш, жёлтая и синяя — границы секторов, зелёная полоса — зоны DRS (${tr[9]}). Справа вверху мини-карта. Жёлтая линия — оптимальная траектория, бледная белая — реальная линия проезда. Слева у старта — питлейн с боксами (лимит 80 км/ч). Болиды заезжают в боксы автоматически при износе шин от 80%.</div></div>
+<div class="card"><h3>Телеметрия: ${lab(c)}</h3><div class="mu" id="tgp"></div><div class="mu" id="tpt"></div><button onclick="pitReq()" style="width:100%;margin:6px 0">🛠 Вызвать в боксы / отменить</button><div class="mu">Скорость <b id="tsp">0</b> км/ч · передача <b id="tgr">1</b> <b id="tdr"></b></div>
+<div class="mu">Газ <b id="tth">0</b>%</div><div class="bar"><i id="bth" style="background:#2e7d32"></i></div>
+<div class="mu">Тормоз <b id="tbr">0</b>%</div><div class="bar"><i id="bbr" style="background:#c62828"></i></div>
+${f1?'<div class="mu">Энергия ERS <b id="ter">70</b>% <b id="tdp"></b></div><div class="bar"><i id="ber" style="background:#1565c0"></i></div>':''}
+<div class="mu">Шины: <b id="tty"></b></div><div class="bar"><i id="bty"></i></div><canvas id="sp" style="height:100px;margin:8px 0"></canvas><div class="mu" id="tsc"></div></div>
+<div class="card"><h3>Положение в гонке</h3><table><tr><th>#</th><th>Болид</th><th>Лидер</th><th>Впереди</th><th>км/ч</th><th>Шины</th><th>Кр.</th></tr><tbody id="lv"></tbody></table><div class="mu" id="lg"></div></div>
+<div class="card"><h3>Стартовая решётка и прогноз круга</h3><table><tr><th>Старт</th><th>Болид</th><th>Круг</th><th>С1</th><th>С2</th><th>С3</th></tr>${gs.map(x=>{const t=rs.find(q=>q.c===x).t;return`<tr><td><select onchange="setG(${x.id},+this.value)">${opts(S.cars.map((_,j)=>'P'+(j+1)),x.grid)}</select></td><td><span style="color:${col(x)}">●</span> ${lab(x)}</td><td>${fmt(t)}</td>${pf.sh.map(h=>`<td>${(t*h).toFixed(3)}</td>`).join('')}</tr>`}).join('')}</table>
+<button style="margin-top:8px;width:100%" onclick="autoG()">🏁 Расставить по темпу</button></div>`;draw()}
+function pitReq(){const c=S.sim.cs.find(q=>q.c===cur());if(c&&!c.pit)c.req=!c.req;draw()}
+function setG(id,g){const c=S.cars.find(x=>x.id==id),o=S.cars.find(x=>x.grid==g);o.grid=c.grid;c.grid=g;r2()}
+function autoG(){tres().forEach((q,i)=>q.c.grid=i);r2()}
+function runT(){S.run=!S.run;last=performance.now();$('rb').textContent=S.run?'⏸ Пауза':'▶ Старт';if(S.run)requestAnimationFrame(loop)}
+function loop(ts){if(!S.run||S.tab!=2)return;let r=Math.min(.1,(ts-last)/1000)*S.spd;last=ts;while(r>0){const d=Math.min(.04,r);step(d);r-=d}draw();requestAnimationFrame(loop)}
+function draw(){const cv=$('tc');if(!cv||!S.sim)return;const z=S.sim,pf=prof(S.tr),P=path(S.tr),L=pf.Lm,N=P.length,w=cv.width=cv.clientWidth,h=cv.height=Math.max(440,Math.round(w*1.1)),x=cv.getContext('2d'),fg=getComputedStyle(document.body).color,sel=cur(),ord=[...z.cs].sort((a,b)=>b.s-a.s);
+if(!pf.ppm){let t=0;P.forEach((q,i)=>{const b=P[(i+1)%N];t+=Math.hypot(b[0]-q[0],b[1]-q[1])});pf.ppm=t/L;const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]);pf.bb=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]}
+const[bx,by,ex,ey]=pf.bb,fit=Math.min((w-30)/(ex-bx),(h-30)/(ey-by)),fc=z.cs.find(q=>q.c===sel)||z.cs[0];
+const at=s=>{const k=kAt(pf,s),b=P[(k+1)%N],t=Math.min(1,Math.max(0,(((s%L)+L)%L-pf.D[k])/pf.ds[k]));return[P[k][0]+(b[0]-P[k][0])*t,P[k][1]+(b[1]-P[k][1])*t,Math.atan2(b[1]-P[k][1],b[0]-P[k][0])]};
+let tx,ty,ts;if(S.cam){const f=at(fc.s);tx=f[0];ty=f[1];ts=w/240/pf.ppm}else{tx=(bx+ex)/2;ty=(by+ey)/2;ts=fit}
+S.kx=S.kx==null?tx:S.kx+(tx-S.kx)*.3;S.ky=S.kx==null?ty:S.ky==null?ty:S.ky+(ty-S.ky)*.3;S.ks=S.ks==null?ts:S.ks+(ts-S.ks)*.3;
+const sc=S.ks,pt=q=>[w/2+(q[0]-S.kx)*sc,h/2+(q[1]-S.ky)*sc],pm=sc*pf.ppm,rw=Math.max(14,Math.min(50,14*pm*1.4)),po=(s,m)=>{const f=at(s),a=pt(f);return[a[0]-Math.sin(f[2])*m*pm,a[1]+Math.cos(f[2])*m*pm,f[2]]};
+const ln=a=>{x.beginPath();a.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]))},sm=v=>{v=cl(v,0,1);return v*v*(3-2*v)};
+x.fillStyle='#2f6b3a';x.fillRect(0,0,w,h);x.lineJoin='round';x.lineCap='butt';
+const tr=()=>{ln(P.map(pt));x.closePath()};
+x.strokeStyle='#e8e8e8';x.lineWidth=rw+9;tr();x.stroke();x.strokeStyle='#d32f2f';x.setLineDash([10,10]);tr();x.stroke();x.setLineDash([]);
+x.strokeStyle='#3b3f45';x.lineWidth=rw;tr();x.stroke();
+x.strokeStyle='#2e9e4f';x.lineWidth=Math.max(2,rw*.12);for(let k=0;k<N;k++)if(pf.dr[k]){const a=pt(P[k]),b=pt(P[(k+1)%N]);x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke()}
+// питлейн
+const pl=[];for(let s=L-350;s<=L+430;s+=10)pl.push(po(s,22*sm((s-(L-350))/60)*sm((L+430-s)/60)));
+x.strokeStyle='#e8e8e8';x.lineWidth=Math.max(7,11*pm)+3;ln(pl);x.stroke();x.strokeStyle='#555a63';x.lineWidth=Math.max(7,11*pm);ln(pl);x.stroke();
+const bl=Math.max(6,16*pm),bw=Math.max(5,8*pm);SER[sel.s].t.forEach((t,i)=>{const p=po(L+30+i*20,31);x.save();x.translate(p[0],p[1]);x.rotate(p[2]);x.fillStyle=t[t.length-1];x.fillRect(-bl/2,-bw/2,bl,bw);x.strokeStyle='#fff';x.lineWidth=1;x.strokeRect(-bl/2,-bw/2,bl,bw);x.restore()});
+x.font='bold 10px system-ui';x.textAlign='center';[['PIT IN',L-350],['PIT OUT',L+430]].forEach(q=>{const p=po(q[1],36);x.lineWidth=3;x.strokeStyle='#000';x.strokeText(q[0],p[0],p[1]);x.fillStyle='#fff';x.fillText(q[0],p[0],p[1])});
+// линии: реальная (бледная) и оптимальная
+const rl=f=>{const a=[];for(let k=0;k<N;k+=2)a.push(po(pf.D[k],pf.off[k]*6*f));a.push(a[0]);ln(a);x.stroke()};
+x.strokeStyle='rgba(255,255,255,.3)';x.lineWidth=2;rl(.55);x.strokeStyle='#ffe600';x.lineWidth=2.5;rl(1);
+const mk=(d,c)=>{const f=at(d),a=pt(f),nx=-Math.sin(f[2]),ny=Math.cos(f[2]),r=rw/2+5;x.strokeStyle=c;x.lineWidth=4;x.beginPath();x.moveTo(a[0]+nx*r,a[1]+ny*r);x.lineTo(a[0]-nx*r,a[1]-ny*r);x.stroke()};
+mk(0,'#fff');mk(L/3,'#ffd600');mk(2*L/3,'#2979ff');
+const car=(px,py,an,co,big)=>{x.save();x.translate(px,py);x.rotate(an);const k=big?1.3:1;x.scale(k,k);x.fillStyle='#111';[[-9,-6.3],[-9,3.6],[4,-6.3],[4,3.6]].forEach(q=>x.fillRect(q[0],q[1],5.5,2.7));
+x.fillStyle=co;x.fillRect(-13,-5.5,3,11);x.fillRect(10.5,-5.5,3,11);x.beginPath();x.moveTo(-11,-2.8);x.lineTo(3,-3.4);x.lineTo(11,-1);x.lineTo(11,1);x.lineTo(3,3.4);x.lineTo(-11,2.8);x.closePath();x.fill();x.strokeStyle='#000';x.lineWidth=.8;x.stroke();x.fillStyle='#fff';x.beginPath();x.arc(-1,0,1.9,0,6.283);x.fill();x.restore()};
+const latOf=c=>{const k=kAt(pf,c.s);let m=pf.off[k]*6*c.lw;if(c.s<150)m+=(c.c.grid%2?1:-1)*6*cl(1-c.s/150,0,1);if(c.pit){const b=sm(cl((c.s-c.ei)/60,0,1)*cl((c.ex-c.s)/60,0,1));m=m*(1-b)+22*b}return m};
+for(const c of z.cs.slice().sort((a,b)=>(a.c===sel)-(b.c===sel))){const a=po(c.s,latOf(c)),isS=c.c===sel;
+if(isS){x.strokeStyle=fg;x.lineWidth=2;x.beginPath();x.arc(a[0],a[1],21,0,6.283);x.stroke()}
+car(a[0],a[1],a[2],col(c.c),isS);x.font='bold 11px system-ui';const t2=(ord.indexOf(c)+1)+' '+SER[c.c.s].t[c.c.t][0].slice(0,3).toUpperCase();x.lineWidth=3;x.strokeStyle='#000';x.strokeText(t2,a[0],a[1]-17);x.fillStyle='#fff';x.fillText(t2,a[0],a[1]-17)}
+x.textAlign='start';
+if(S.cam){const mw=112,mh=92,m0=w-mw-8,mm=Math.min((mw-12)/(ex-bx),(mh-12)/(ey-by)),q=p=>[m0+6+(p[0]-bx)*mm,14+(p[1]-by)*mm];x.fillStyle='rgba(0,0,0,.6)';x.fillRect(m0,8,mw,mh);x.strokeStyle='#ddd';x.lineWidth=2;ln(P.map(q));x.closePath();x.stroke();z.cs.forEach(c=>{const a=q(at(c.s));x.fillStyle=col(c.c);x.beginPath();x.arc(a[0],a[1],c.c===sel?4.5:3,0,6.283);x.fill()})}
+$('lv').innerHTML=ord.map((c,r)=>`<tr${c.c===sel?' style="font-weight:700"':''}><td>${r+1}</td><td><span style="color:${col(c.c)}">●</span> ${lab(c.c)}${c.pit?' 🅿':''}${c.dr?' <b style="color:#2e9e4f">DRS</b>':''}</td><td>${r?'+'+((ord[0].s-c.s)/L*c.lt0).toFixed(1):'—'}</td><td>${r?'+'+((ord[r-1].s-c.s)/L*c.lt0).toFixed(2):'—'}</td><td>${Math.round(c.v)}</td><td><b style="color:${CP[c.comp].c};text-shadow:0 0 1px #000">${c.comp}</b> ${c.wr}%</td><td>${Math.max(0,c.lp)}</td></tr>`).join('');
+$('lg').innerHTML=z.log.map(s=>'🔁 '+s).join('<br>');
+const c=z.cs.find(q=>q.c===sel);if(!c)return;const r=ord.indexOf(c);
+$('tgp').innerHTML=r?`<b>P${r+1}</b> · отставание от ${lab(ord[r-1].c)}: <b>+${((ord[r-1].s-c.s)/L*c.lt0).toFixed(3)} с</b>`:`<b>P1 · лидер</b>${ord[1]?` · интервал до ${lab(ord[1].c)}: <b>+${((c.s-ord[1].s)/L*c.lt0).toFixed(3)} с</b>`:''}`;
+const pt2=z.t-c.pin;$('tpt').innerHTML=c.pit===1?`🅿 Питлейн (лимит 80 км/ч): <b>${pt2.toFixed(2)} с</b>`:c.pit===2?`🛠 Стоянка в боксах: <b>${c.stC.toFixed(2)} с</b> · питлейн ${pt2.toFixed(2)} с`:c.pit===3?`Выезд из боксов · питлейн <b>${pt2.toFixed(2)} с</b>`:`Последний пит-стоп: питлейн <b>${c.pl?c.pl.toFixed(2):'—'} с</b> · стоянка <b>${c.stT?c.stT.toFixed(2):'—'} с</b>${c.req?' · заявка на заезд ✔':''}`;
+$('tsp').textContent=Math.round(c.v);$('tgr').textContent=c.s<0&&c.v<3?'N':c.gr;$('tdr').textContent=c.dr?'· DRS':'';$('tth').textContent=Math.round(c.th);$('bth').style.width=c.th+'%';$('tbr').textContent=Math.round(c.br);$('bbr').style.width=c.br+'%';
+if($('ter')){$('ter').textContent=Math.round(c.er);$('ber').style.width=c.er+'%';$('tdp').textContent=c.dp?'· деплой':''}
+$('tty').textContent=`${CP[c.comp].n} · износ ${c.wr}% · ${c.age.toFixed(1)} кр.`;$('bty').style.width=c.wr+'%';$('bty').style.background=c.wr<60?'#2e7d32':c.wr<85?'#ef8f00':'#c62828';
+const c3=[0,1,2].map(j=>j<c.sec?c.sc[j]:j==c.sec?z.t-c.st:0);
+$('tsc').innerHTML=`Круг ${Math.max(0,c.lp)}: <b>${c.lp>0?fmt(z.t-c.ts):'—'}</b><br>Сейчас: С1 ${sf(c3[0])} · С2 ${sf(c3[1])} · С3 ${sf(c3[2])}<br>Прошлый: С1 ${sf(c.ls[0])} · С2 ${sf(c.ls[1])} · С3 ${sf(c.ls[2])} · круг ${c.last?fmt(c.last):'—'}<br>Лучший круг: ${c.best?fmt(c.best):'—'}`;
+const sp=$('sp'),sw=sp.width=sp.clientWidth,sh=sp.height=100,y=sp.getContext('2d'),vm=pf.vt*1.05;
+y.strokeStyle=fg;y.lineWidth=2;y.beginPath();for(let k=0;k<pf.n;k+=2){const X=pf.D[k]/L*sw,Y=sh-4-pf.u[k]*3.6*c.m/vm*(sh-8);k?y.lineTo(X,Y):y.moveTo(X,Y)}y.stroke();
+y.strokeStyle='#ffd600';y.beginPath();y.moveTo(sw/3,0);y.lineTo(sw/3,sh);y.moveTo(2*sw/3,0);y.lineTo(2*sw/3,sh);y.stroke();
+const cp=((c.s%L+L)%L)/L*sw;y.strokeStyle='#e10600';y.beginPath();y.moveTo(cp,0);y.lineTo(cp,sh);y.stroke();y.fillStyle='#e10600';y.beginPath();y.arc(cp,sh-4-c.v/vm*(sh-8),4,0,6.283);y.fill()}
+// ---------- Общее ----------
+const R=[r0,r1,r2];
+function go(){$('ti').textContent=T[S.tr][0]+': '+tinfo(S.tr);$('eqb').textContent='Мощность болидов: '+(S.eq?'равная':'реальная');$('eqb').className=S.eq?'on':'';
+$('chips').innerHTML=S.cars.map((c,i)=>`<button class="chip${i==S.a?' on':''}" onclick="S.a=${i};go()"><i style="background:${col(c)}"></i>${lab(c)}</button>`).join('');R[S.tab]()}
+function tab(n){S.run=false;S.tab=n;document.querySelectorAll('nav button').forEach((b,i)=>b.className=i==n?'on':'');go()}
+$('trk').innerHTML=opts(T.map(t=>t[0]),0);
+S.cars.push(mk('f1',0),mk('f1',9));S.cars.forEach((c,i)=>c.grid=i);tab(0);
+</script></body></html>
