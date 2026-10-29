@@ -155,3 +155,31 @@ build.py              сборка одного html-файла
 - Контуры трасс: проект [bacinger/f1-circuits](https://github.com/bacinger/f1-circuits) (лицензия MIT), прорежены. Вьетнам нарисован вручную, Баку восстановлен по ориентирам - они приблизительные.
 - Характеристики команд, износ шин по трассам и физика - оценки автора, а не данные игры. Набор шин подтверждён у Pirelli только для Австралии, Бахрейна, Вьетнама, Китая, Монако и Канады.
 - Диапазоны настроек взяты из руководств по F1 2020.
+
+<h2>🤝 Authors & Contributors</h2>
+<p>Проект пилится двумя людьми (и одним ИИ):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>GitHub</th>
+      <th>Discord</th>
+      <th>Telegram</th>
+      <th>Email</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/mormeowi">@mormeowi</a></td>
+      <td><code>meowmeowmeow_w</code></td>
+      <td><code>@blebxddd</code></td>
+      <td><code>g01858081@gmail.com</code></td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/Shalopaiz">@Shalopaiz</a></td>
+      <td><code>shalopai.</code></td>
+      <td><code>@shalopais</code></td>
+      <td><code>goblinmister652@gmail.com, egor45677777@yandex.com</code></td>
+    </tr>
+  </tbody>
+</table>
