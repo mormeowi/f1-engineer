@@ -1,0 +1,3962 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>F1 2020 — Инженер-стратег</title>
+    <style>
+/* F1 2020 Race Engineer - styles. Colours are CSS variables on :root; the dark theme redefines them. */
+
+:root {
+  --bg:#f2f3f6;
+  --fg:#14161b;
+  --cd:#fff;
+  --mu:#6b7280;
+  --ln:#dfe2e8;
+  --ac:#e10600;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+
+@media (prefers-color-scheme:dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0e1014;
+    --fg:#eceef2;
+    --cd:#181b22;
+    --mu:#9aa1ad;
+    --ln:#2a2e38;
+    color-scheme:dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:#0e1014;
+  --fg:#eceef2;
+  --cd:#181b22;
+  --mu:#9aa1ad;
+  --ln:#2a2e38;
+  color-scheme:dark;
+}
+
+html {
+  scroll-padding-top:env(safe-area-inset-top,0px);
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-bottom:70px;
+}
+
+body::before {
+  content:"";
+  position:fixed;
+  inset:0 0 auto;
+  height:env(safe-area-inset-top,0px);
+  background:var(--cd);
+  z-index:10;
+}
+
+header {
+  position:sticky;
+  top:env(safe-area-inset-top,0px);
+  background:var(--cd);
+  border-bottom:2px solid var(--ac);
+  padding:8px 12px;
+  z-index:9;
+}
+
+h1 {
+  font-size:17px;
+  margin:0 0 6px;
+}
+
+h3 {
+  margin:0 0 8px;
+  font-size:15px;
+}
+
+main,#chips {
+  max-width:860px;
+  margin:0 auto;
+  padding:10px 12px;
+}
+
+#chips {
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:0;
+}
+
+.row {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.row>* {
+  flex:1;
+}
+
+select,button {
+  font:inherit;
+  color:var(--fg);
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:10px;
+  padding:8px 10px;
+  min-height:38px;
+}
+
+button {
+  cursor:pointer;
+}
+
+button.on,.chip.on {
+  background:var(--ac);
+  color:#fff;
+  border-color:var(--ac);
+}
+
+button.pr {
+  background:var(--ac);
+  color:#fff;
+  border-color:var(--ac);
+  font-weight:600;
+}
+
+.chip {
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:none;
+  padding:6px 10px;
+  min-height:34px;
+}
+
+.chip i {
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+
+.card {
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+.seg {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.seg>button {
+  flex:1;
+  padding:6px;
+}
+
+.sl {
+  display:grid;
+  grid-template-columns:1fr auto;
+  margin:6px 0;
+  font-size:13px;
+}
+
+.sl input {
+  grid-column:1/3;
+  width:100%;
+  accent-color:var(--ac);
+}
+
+.sl b {
+  font-variant-numeric:tabular-nums;
+}
+
+.g {
+  color:var(--mu);
+  font-size:12px;
+  text-transform:uppercase;
+  margin:12px 0 2px;
+  letter-spacing:.05em;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+
+td,th {
+  padding:5px 3px;
+  border-bottom:1px solid var(--ln);
+  text-align:left;
+}
+
+canvas {
+  width:100%;
+  display:block;
+  border-radius:10px;
+  background:var(--bg);
+}
+
+.mu {
+  color:var(--mu);
+  font-size:13px;
+}
+
+.bad {
+  color:var(--ac);
+  font-weight:600;
+}
+
+nav {
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  background:var(--cd);
+  border-top:1px solid var(--ln);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:9;
+}
+
+nav button {
+  flex:1;
+  border:0;
+  border-radius:0;
+  min-height:52px;
+  background:none;
+}
+
+nav button.on {
+  background:none;
+  color:var(--ac);
+  font-weight:700;
+  border-top:3px solid var(--ac);
+}
+
+.big {
+  font-size:26px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+
+.bar {
+  height:12px;
+  background:var(--ln);
+  border-radius:6px;
+  overflow:hidden;
+  margin-bottom:4px;
+}
+
+.bar i {
+  display:block;
+  height:100%;
+  width:0;
+}
+
+#st {
+  position:fixed;
+  inset:0;
+  z-index:50;
+  background:radial-gradient(circle at 50% 30%,var(--cd),var(--bg));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:24px;
+}
+
+#st h1 {
+  font-size:34px;
+  margin:6px 0 2px;
+}
+
+#st .sub {
+  color:var(--mu);
+  margin-bottom:28px;
+}
+
+#st .go {
+  font-size:20px;
+  padding:14px 56px;
+  border-radius:14px;
+}
+
+#st .lang {
+  margin-top:22px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--mu);
+}
+
+#wm {
+  position:fixed;
+  right:8px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 58px);
+  z-index:60;
+  font-size:11px;
+  color:var(--mu);
+  pointer-events:none;
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:8px;
+  padding:3px 8px;
+  opacity:.92;
+}
+
+#wm a {
+  color:var(--ac);
+  pointer-events:auto;
+  text-decoration:none;
+  font-weight:600;
+}
+
+body.st #wm {
+  bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+}
+
+.spotify {
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  margin-top:16px;
+  padding:11px 26px;
+  border-radius:500px;
+  background:#1db954;
+  color:#000;
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:.2px;
+  text-decoration:none;
+  box-shadow:0 4px 14px rgba(29,185,84,.35);
+  transition:transform .12s,background .12s;
+}
+
+.spotify:hover {
+  background:#1ed760;
+  transform:scale(1.04);
+}
+
+.spotify:active {
+  transform:scale(.98);
+}
+
+.spotify svg {
+  width:22px;
+  height:22px;
+  flex:none;
+}
+
+/* ---- Race tab: wide layout, broadcast frame, timing tower ---- */
+#ti {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 6px 12px 0;
+}
+
+body.wide main,
+body.wide #chips,
+body.wide #ti {
+  max-width: 1500px;
+}
+
+input[type=text] {
+  font: inherit;
+  color: var(--fg);
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-height: 38px;
+  width: 100%;
+}
+
+.stage {
+  position: relative;
+  margin: 0 -12px 10px;
+  background: #0b0d12;
+  border-top: 3px solid #e10600;
+  overflow: hidden;
+}
+
+@media (min-width: 760px) {
+  .stage {
+    margin: 0 0 10px;
+    border: 2px solid #1c2028;
+    border-top: 3px solid #e10600;
+    border-radius: 14px;
+  }
+}
+
+.bcast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  background: linear-gradient(90deg, #14171e, #0b0d12);
+  color: #fff;
+  font: 700 13px/1 system-ui, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.bcast .live b {
+  background: #e10600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.stage canvas {
+  border-radius: 0;
+  background: #0b0d12;
+}
+
+.tower {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 140px;
+  color: #fff;
+  font: 600 11px/1 system-ui, sans-serif;
+  background: rgba(11, 13, 18, .82);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tw-h {
+  padding: 5px 8px;
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: #9aa1ad;
+  background: rgba(255, 255, 255, .06);
+  cursor: pointer;
+}
+
+.tw-r {
+  display: grid;
+  grid-template-columns: 16px 4px 1fr auto 12px;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.tw-r.sel {
+  background: rgba(225, 6, 0, .55);
+}
+
+.tw-r i {
+  display: block;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.tw-r b {
+  text-align: right;
+}
+
+.tw-r em {
+  font-style: normal;
+  color: #e8e8e8;
+  font-variant-numeric: tabular-nums;
+}
+
+.tw-r u {
+  text-decoration: none;
+  font-size: 10px;
+}
+
+/* ---- Race tab: compact controls inside the frame, status HUD on the map ---- */
+.view {
+  position: relative;
+}
+
+.hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100px;
+  pointer-events: none;
+  background: transparent !important;
+}
+
+.tools {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: #0b0d12;
+}
+
+/* all buttons share the width, so nothing needs scrolling on a phone */
+.tools button {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 90px;
+  min-height: 34px;
+  padding: 4px 2px;
+  font-size: 15px;
+  white-space: nowrap;
+  color: #fff;
+  background: #1b1f27;
+  border: 1px solid #2a2f3a;
+}
+
+.tools button.on,
+.tools button.pr {
+  background: #e10600;
+  border-color: #e10600;
+}
+
+/* less chrome above the map on the race tab */
+body.wide header {
+  position: static;
+  padding: 6px 12px;
+}
+
+body.wide header h1,
+body.wide #ti,
+body.wide #eqb {
+  display: none;
+}
+
+body.wide header select,
+body.wide header button {
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+/* ---- Pilot card ---- */
+.pilot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 12px;
+}
+
+.rtg {
+  flex: none;
+  width: 58px;
+  padding: 6px 0;
+  text-align: center;
+  color: #fff;
+  background: #e10600;
+  border-radius: 10px;
+}
+
+.rtg b {
+  display: block;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.rtg small {
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+
+.pst {
+  flex: 1;
+}
+
+.pst label {
+  display: grid;
+  grid-template-columns: 34px 1fr 26px;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pst input {
+  height: 18px;
+  margin: 0;
+  accent-color: var(--ac);
+}
+
+.pst b {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Settings menu ---- */
+.gear {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 12px;
+  padding: 6px 12px;
+  font-size: 20px;
+  border-radius: 12px;
+}
+
+#set {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .5);
+}
+
+#set.open {
+  display: flex;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 380px;
+  padding: 14px 16px;
+  color: var(--fg);
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+}
+
+.sh-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.srow {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.srow select {
+  grid-column: 2 / 4;
+}
+
+.srow input[type=range] {
+  accent-color: var(--ac);
+}
+</style>
+</head>
+<body class="st">
+
+<!-- Top bar: track, power mode, theme, language -->
+<header>
+    <h1>🏎️ F1 2020 · Инженер-стратег</h1>
+    <div class="row">
+        <select id="trk" onchange="state.tr=+this.value;render()"></select>
+        <button id="eqb" onclick="state.eq=!state.eq;render()"></button>
+        <button id="setb" onclick="openSettings()" style="flex:0 0 auto">⚙️</button>
+    </div>
+</header>
+
+<!-- Car chips, track facts and the active tab are rendered into these three containers -->
+<div id="chips"></div>
+<div id="ti" class="mu"></div>
+<main id="m"></main>
+
+<nav>
+    <button onclick="switchTab(0)">🔧 Болид</button>
+    <button onclick="switchTab(1)">📊 Стратегия</button>
+    <button onclick="switchTab(2)">⏱️ Тест</button>
+</nav>
+
+<!-- Start screen -->
+<div id="st">
+    <div style="font-size:64px">🏎️</div>
+    <h1>F1 2020</h1>
+    <div class="sub">Инженер-стратег</div>
+    <button class="gear" onclick="openSettings()">⚙️</button>
+    <button class="pr go" onclick="startApp()">Начать</button>
+    <a class="spotify" href="https://open.spotify.com/playlist/6NShZO3L4vNwC0VX8GzDp1?si=9W0B8rEhSrSBn7LOVs0Uhw&amp;utm_source=copy-link&amp;pi=WIhhPJ_0SsCqB" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="12" fill="#000"/>
+            <path d="M5.5 9c4.5-1.3 9-.9 13 1.4M6.5 12.6c3.6-1 7-.7 10 1.1M7.6 15.8c2.7-.7 5.2-.5 7.4.8" stroke="#1db954" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span>Мой гоночный плейлист</span>
+    </a>
+    <div class="lang"><span>Язык</span>
+        <select id="sl" onchange="setLang(this.value)">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+    <div class="lang"><span>Тема</span>
+        <select id="sth" onchange="setTheme(this.value)">
+            <option value="sys">Как в системе</option>
+            <option value="white">Белая</option>
+            <option value="black">Чёрная</option>
+        </select>
+    </div>
+</div>
+
+<!-- Settings menu -->
+<div id="set" onclick="if (event.target === this) closeSettings()">
+    <div class="sheet">
+        <div class="sh-h"><b>⚙️ Настройки</b><button onclick="closeSettings()">✕</button></div>
+        <label class="srow"><span>Тема</span>
+            <select id="sthm" onchange="setTheme(this.value)">
+                <option value="sys">Как в системе</option>
+                <option value="white">Белая</option>
+                <option value="black">Чёрная</option>
+            </select>
+        </label>
+        <label class="srow"><span>Язык</span>
+            <select id="slng" onchange="setLang(this.value)">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+            </select>
+        </label>
+        <label class="srow"><span>Громкость</span>
+            <input type="range" id="svol" min="0" max="100" value="60" oninput="onVolumeInput(+this.value)" onchange="playEvent('preview')">
+            <b id="svv">60</b>
+        </label>
+        <div class="mu">Звук: двигатель выбранного болида и сигналы событий гонки (обгон, пит-стоп, авария, финиш).</div>
+    </div>
+</div>
+
+<div id="wm">Made with Claude · by mormeowi · <a href="https://github.com/mormeowi" target="_blank" rel="noopener">GitHub: mormeowi</a></div>
+
+<!-- Scripts: plain scripts (no modules) so the page also works when opened from disk. Order matters. -->
+<script>
+/**
+ * Small helpers shared by every module.
+ */
+
+const $ = id => document.getElementById(id);
+
+const hashString = s => {
+    let h = 2166136261;
+    for (const c of s) {
+        h ^= c.charCodeAt(0);
+        h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0) / 4294967296;
+};
+
+const formatTime = t => {
+    const h = Math.floor(t / 3600);
+    const m = Math.floor(t % 3600 / 60);
+    const s = t % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + s.toFixed(3).padStart(6, '0');
+};
+
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+const formatSector = t => t ? t.toFixed(3) : '—';
+
+// Roughly normal random number (mean 0, standard deviation 1).
+const gauss = () => (Math.random() + Math.random() + Math.random() + Math.random() - 2) * 1.73;
+
+// Gap text like on a timing screen: 0.842 / 12.4 / 1:04.2
+const formatGapTime = d => d < 10 ? d.toFixed(3) : d < 60 ? d.toFixed(1) : Math.floor(d / 60) + ':' + (d % 60).toFixed(1).padStart(4, '0');
+
+/**
+ * Global application state. Everything the UI shows is derived from this object.
+ * 
+ * state fields
+ *   cars   list of cars in the garage (see makeCar in model/cars.js)
+ *   a      index of the active car (the chip that is highlighted)
+ *   tr     index of the selected track in TRACKS
+ *   eq     true = "equal power" mode: team performance values are ignored
+ *   pct    race distance in percent (25 / 35 / 50 / 100)
+ *   tab    active tab: 0 car, 1 strategy, 2 test
+ *   spd    simulation speed multiplier in the test tab
+ *   run    true while the race animation is running
+ *   human  true = realistic driving: lap-to-lap pace noise, mistakes, slow starts and pit stops
+ *   dnf    true = crashes, contact, damage and technical failures can happen (retirements)
+ *   gap    timing tower mode: 'int' = interval to the car ahead, 'gap' = gap to the leader
+ *   cam    true = camera follows the selected car, false = whole track
+ *   z      camera zoom factor
+ *   lang   'ru' or 'en'
+ *   weather 'dry' | 'damp' | 'rain' (model/weather.js)
+ *   theme  'sys' | 'white' | 'black'
+ *   volume master volume 0-100 (settings menu)
+ *   sim    current race simulation (created by initSimulation), see simulation.js
+ *   key    signature of the last simulation inputs; the simulation restarts when it changes
+ */
+
+const state = {
+    cars: [], a: 0, tr: 0, eq: false, pct: 100, tab: 0, tc: 'S', fuel: 10, spd: 5, run: false, tm: 0, cam: true,
+    theme: 'sys',
+    weather: 'dry',
+    volume: 60,
+    human: false,
+    dnf: false,
+    gap: 'int', z: 1
+};
+
+let nextCarId = 0;
+let lastFrameTime = 0;
+
+/**
+ * The 22 circuits of F1 2020. TRACKS[i][TRACK.xxx] is used all over the code; index i is the track number
+ * (the same index is used by TRACK_GEOMETRY and TYRE_ALLOCATION).
+ *
+ * To tune a track edit its row:
+ *   LAP_TIME       reference race-pace lap time in seconds (a clean lap of a mid-grid F1 car)
+ *   PIT_LOSS       time lost for a pit-lane drive-through without stopping, seconds
+ *   TYRE_WEAR      tyre wear factor (1 = average, higher = tyres die sooner)
+ *   FULL_THROTTLE  share of the lap at full throttle, % (decides how important engine power is)
+ *   DOWNFORCE      required downforce level 1-5 (decides the ideal wing settings)
+ *   OVERTAKING     1 = very hard to overtake ... 5 = easy
+ */
+const TRACK = {
+    NAME: 0,
+    LENGTH_KM: 1,
+    LAPS: 2,
+    LAP_TIME: 3,
+    PIT_LOSS: 4,
+    TYRE_WEAR: 5,
+    FULL_THROTTLE: 6,
+    DOWNFORCE: 7,
+    CORNERS: 8,
+    DRS_ZONES: 9,
+    OVERTAKING: 10,
+};
+
+//                 name, km, laps, lap time, pit loss, tyre wear, full throttle %, downforce, corners, DRS, overtaking
+const TRACKS = [
+    ['Австралия', 5.303, 58, 80, 21, 0.8, 66, 3, 14, 2, 3],
+    ['Бахрейн', 5.412, 57, 93, 23, 1.3, 70, 3, 15, 3, 4],
+    ['Вьетнам', 5.607, 55, 91.5, 22, 0.9, 72, 2, 23, 3, 4],
+    ['Китай', 5.451, 56, 96, 22, 1.15, 63, 3, 16, 2, 4],
+    ['Нидерланды', 4.259, 72, 71.5, 18, 1.25, 62, 4, 14, 2, 2],
+    ['Испания', 4.655, 66, 79, 22, 1.4, 63, 4, 16, 2, 2],
+    ['Монако', 3.337, 78, 72, 19, 0.55, 40, 5, 19, 1, 1],
+    ['Азербайджан', 6.003, 51, 102, 20, 0.8, 75, 1, 20, 2, 4],
+    ['Канада', 4.361, 70, 73, 18, 0.85, 70, 2, 14, 2, 4],
+    ['Франция', 5.842, 53, 91.5, 22, 0.95, 66, 3, 15, 2, 3],
+    ['Австрия', 4.318, 71, 65.5, 20, 1, 70, 2, 10, 2, 4],
+    ['Великобритания', 5.891, 52, 87, 21, 1.45, 68, 3, 18, 2, 4],
+    ['Венгрия', 4.381, 70, 77.5, 20, 0.95, 55, 5, 14, 1, 1],
+    ['Бельгия', 7.004, 44, 103, 19, 1.2, 75, 2, 19, 2, 4],
+    ['Италия', 5.793, 53, 81.5, 24, 0.85, 80, 1, 11, 2, 4],
+    ['Сингапур', 5.063, 61, 99, 26, 0.95, 50, 5, 23, 3, 2],
+    ['Россия', 5.848, 53, 93, 21, 0.7, 68, 2, 18, 2, 3],
+    ['Япония', 5.807, 53, 91.5, 21, 1.4, 66, 4, 18, 1, 2],
+    ['США', 5.513, 56, 96, 20, 1.25, 62, 3, 20, 2, 4],
+    ['Мексика', 4.304, 71, 78.5, 21, 0.8, 60, 4, 17, 3, 3],
+    ['Бразилия', 4.309, 71, 71, 21, 1.05, 66, 3, 15, 2, 4],
+    ['Абу-Даби', 5.554, 55, 99, 22, 0.9, 62, 3, 16, 2, 4],
+];
+
+/**
+ * Pirelli compounds nominated for the race: [hard, medium, soft] as C-numbers (C1 = hardest ... C5 = softest).
+ * Confirmed by Pirelli for Australia, Bahrain, Vietnam, China, Monaco and Canada; the other tracks use the
+ * usual nomination and are approximate.
+ */
+const TYRE_ALLOCATION = [
+    [2, 3, 4], // Австралия
+    [2, 3, 4], // Бахрейн
+    [2, 3, 4], // Вьетнам
+    [2, 3, 4], // Китай
+    [2, 3, 4], // Нидерланды
+    [1, 2, 3], // Испания
+    [3, 4, 5], // Монако
+    [2, 3, 4], // Азербайджан
+    [3, 4, 5], // Канада
+    [2, 3, 4], // Франция
+    [2, 3, 4], // Австрия
+    [1, 2, 3], // Великобритания
+    [2, 3, 4], // Венгрия
+    [2, 3, 4], // Бельгия
+    [2, 3, 4], // Италия
+    [3, 4, 5], // Сингапур
+    [2, 3, 4], // Россия
+    [1, 2, 3], // Япония
+    [2, 3, 4], // США
+    [2, 3, 4], // Мексика
+    [2, 3, 4], // Бразилия
+    [2, 3, 4], // Абу-Даби
+];
+
+/**
+ * Track outlines. One string per track index: 'latitude|x,y x,y ...'
+ *   latitude  integer latitude in degrees (only used to correct the east-west scale)
+ *   x,y       points in units of 0.0001 degree, in lap direction, starting at the start/finish line.
+ * Points come from the open f1-circuits data set (github.com/bacinger/f1-circuits, MIT licence), thinned out;
+ * the code smooths them with a Catmull-Rom spline.
+ * Vietnam (never raced) is a hand-drawn outline and Baku is reconstructed from landmarks, so both are approximate.
+ */
+const TRACK_GEOMETRY = {
+    // Австралия
+    0: '37|9686,-8498 9661,-8478 9662,-8465 9653,-8457 9643,-8449 9635,-8441 9624,-8427 9621,-8423 9627,-8420 9637,-8418 9637,-8403 9651,-8390 9670,-8384 9680,-8380 9692,-8385 9704,-8388 9711,-8393 9715,-8402 9718,-8415 9715,-8422 9710,-8429 9706,-8448 9709,-8459 9715,-8468 9729,-8478 9740,-8481 9753,-8484 9769,-8494 9778,-8507 9785,-8527 9786,-8531 9762,-8539 9754,-8537 9747,-8527 9741,-8521 9733,-8527 9726,-8529',
+    // Бахрейн
+    1: '26|5105,317 5107,368 5117,364 5129,366 5181,357 5184,355 5165,337 5158,330 5146,329 5135,316 5131,319 5135,345 5128,353 5124,319 5123,292 5128,287 5140,292 5147,304 5157,308 5170,302 5175,297 5109,261 5103,267 5104,294',
+    // Вьетнам
+    2: '0|10,-70 60,-70 80,-64 90,-50 80,-38 62,-42 54,-30 66,-18 46,-12 30,-22 40,-34 24,-44 14,-56',
+    // Китай
+    3: '31|2184,3368 2168,3367 2162,3374 2164,3380 2171,3380 2172,3378 2171,3372 2174,3371 2177,3373 2179,3378 2177,3382 2170,3389 2158,3400 2152,3414 2150,3421 2153,3422 2160,3416 2170,3402 2175,3397 2181,3395 2188,3396 2194,3400 2198,3408 2202,3411 2208,3412 2212,3410 2217,3402 2221,3401 2227,3408 2216,3425 2202,3444 2197,3441 2192,3442 2189,3447 2191,3453 2198,3455 2206,3453 2210,3448 2233,3419 2254,3391 2278,3361 2274,3359 2253,3382 2230,3378',
+    // Нидерланды
+    4: '52|5405,3884 5421,3908 5432,3918 5438,3914 5431,3904 5429,3893 5425,3889 5415,3887 5412,3884 5416,3881 5433,3884 5449,3885 5462,3883 5475,3884 5486,3888 5498,3890 5517,3889 5527,3886 5531,3880 5528,3874 5518,3866 5512,3858 5506,3857 5494,3858 5485,3862 5482,3865 5487,3868 5502,3870 5510,3873 5511,3878 5494,3881 5471,3880 5454,3877 5440,3873 5433,3871 5428,3874 5421,3874 5420,3872 5426,3850 5423,3845 5408,3844 5396,3845 5389,3851 5387,3855 5389,3860',
+    // Испания
+    5: '41|2612,5700 2589,5673 2571,5652 2564,5646 2552,5649 2541,5643 2529,5643 2523,5649 2521,5653 2523,5660 2541,5683 2547,5684 2554,5676 2551,5670 2540,5656 2546,5653 2562,5659 2577,5672 2571,5679 2560,5697 2565,5706 2617,5726 2620,5730 2610,5734 2597,5729 2589,5734 2605,5746 2621,5744 2637,5731 2635,5727',
+    // Монако
+    6: '43|4272,7394 4276,7400 4286,7410 4289,7411 4291,7408 4295,7403 4296,7402 4297,7403 4293,7407 4298,7410 4302,7411 4304,7410 4303,7404 4301,7394 4294,7385 4284,7379 4273,7375 4262,7373 4252,7370 4237,7369 4225,7368 4221,7366 4218,7361 4218,7356 4222,7352 4224,7343 4222,7338 4225,7332 4231,7328 4235,7326 4230,7324 4225,7324 4224,7327 4219,7332 4215,7341 4213,7350 4212,7357 4213,7364 4215,7367 4220,7370 4229,7371 4242,7374 4251,7375 4264,7379 4273,7380 4278,7388 4275,7391',
+    // Азербайджан
+    7: '40|8532,3727 8550,3733 8552,3736 8548,3743 8542,3752 8536,3761 8528,3759 8515,3754 8500,3750 8480,3752 8460,3746 8440,3738 8425,3730 8415,3720 8405,3710 8398,3702 8392,3696 8385,3692 8375,3695 8365,3699 8355,3695 8345,3685 8335,3672 8325,3660 8318,3648 8311,3636 8315,3628 8330,3630 8360,3642 8400,3658 8450,3679 8500,3700 8522,3713',
+    // Канада
+    8: '45|-5232,5018 -5227,5001 -5226,4991 -5228,4979 -5219,4974 -5223,4971 -5234,4972 -5246,4976 -5259,4985 -5260,4987 -5259,4991 -5270,5000 -5276,5004 -5281,5010 -5281,5025 -5285,5028 -5294,5029 -5297,5033 -5299,5050 -5298,5068 -5292,5085 -5281,5092 -5274,5114 -5273,5125 -5277,5141 -5274,5143 -5271,5135 -5268,5128 -5254,5104 -5235,5043 -5238,5037 -5235,5026',
+    // Франция
+    9: '43|7916,2520 7961,2495 7965,2504 7977,2507 7984,2502 8002,2497 8018,2500 8029,2498 8021,2486 8015,2480 8016,2473 8026,2470 8037,2476 8037,2499 8032,2508 8015,2515 7990,2522 7949,2536 7939,2542 7932,2538 7881,2551 7821,2568 7809,2571 7800,2583 7789,2586 7782,2577 7792,2576 7798,2572 7800,2566 7816,2560 7843,2546 7859,2542 7868,2546 7896,2531',
+    // Австрия
+    10: '47|7651,2200 7611,2193 7592,2210 7580,2223 7569,2239 7541,2261 7559,2264 7581,2262 7606,2259 7643,2257 7646,2255 7629,2244 7597,2246 7586,2238 7598,2223 7613,2223 7633,2231 7665,2232 7693,2232 7700,2229 7706,2215 7694,2208',
+    // Великобритания
+    11: '52|-153,789 -126,789 -109,780 -104,765 -100,740 -95,735 -100,724 -93,709 -114,695 -153,651 -167,638 -176,635 -195,648 -220,665 -230,662 -242,671 -243,676 -207,705 -186,713 -158,714 -138,724 -125,715 -114,723 -116,732 -184,770 -200,768 -202,760 -217,761 -206,777 -186,786',
+    // Венгрия
+    12: '47|2459,5803 2424,5821 2440,5825 2474,5809 2484,5812 2477,5824 2497,5854 2506,5863 2500,5878 2507,5885 2521,5880 2536,5868 2538,5853 2552,5849 2558,5844 2555,5832 2565,5818 2566,5815 2550,5800 2532,5787 2511,5799 2502,5796 2519,5785 2518,5777 2506,5777',
+    // Бельгия
+    13: '50|9650,4443 9638,4462 9668,4451 9703,4426 9719,4416 9735,4394 9757,4356 9776,4315 9767,4307 9768,4293 9733,4277 9723,4279 9741,4291 9737,4307 9727,4337 9707,4342 9690,4336 9680,4320 9664,4304 9648,4307 9624,4289 9600,4295 9596,4302 9607,4318 9631,4331 9660,4342 9671,4351 9681,4369 9669,4390 9664,4414 9673,4418 9665,4426',
+    // Италия
+    14: '45|2812,6190 2819,6244 2821,6263 2825,6282 2840,6294 2867,6299 2912,6302 2930,6308 2955,6314 2964,6311 2969,6287 2950,6277 2919,6264 2873,6236 2859,6225 2858,6217 2851,6212 2847,6195 2837,6127 2827,6119 2812,6125 2807,6139 2808,6162',
+    // Сингапур
+    15: '1|8641,2917 8644,2898 8639,2887 8616,2889 8612,2894 8573,2898 8553,2911 8547,2905 8539,2867 8534,2869 8524,2881 8516,2891 8523,2907 8531,2921 8536,2926 8548,2915 8553,2922 8559,2931 8585,2916 8624,2913 8629,2918 8624,2936 8625,2948 8630,2946 8638,2944 8640,2931',
+    // Россия
+    16: '43|9681,4097 9660,4077 9606,4066 9579,4060 9562,4074 9539,4077 9524,4062 9533,4043 9490,4022 9474,4040 9476,4057 9512,4062 9517,4071 9506,4093 9524,4100 9562,4099 9600,4087 9637,4088 9648,4078 9661,4085 9660,4097 9668,4110 9683,4127 9700,4122',
+    // Япония
+    17: '34|5403,8433 5432,8405 5434,8400 5427,8390 5411,8405 5398,8408 5392,8419 5376,8423 5370,8430 5374,8443 5362,8450 5345,8449 5327,8433 5310,8431 5303,8455 5303,8464 5306,8470 5302,8471 5291,8457 5272,8454 5252,8461 5240,8477 5230,8484 5219,8478 5230,8466 5257,8454 5300,8442 5324,8442 5343,8456 5353,8457 5365,8461 5379,8457 5384,8452',
+    // США
+    18: '30|-6397,1318 -6379,1306 -6367,1302 -6373,1316 -6371,1324 -6352,1335 -6342,1346 -6336,1355 -6330,1361 -6313,1358 -6299,1366 -6289,1362 -6271,1365 -6259,1377 -6246,1390 -6246,1395 -6267,1389 -6323,1378 -6363,1374 -6357,1362 -6356,1355 -6367,1362 -6376,1366 -6371,1354 -6369,1343 -6380,1336 -6392,1340 -6405,1355 -6433,1346 -6435,1344 -6422,1335',
+    // Мексика
+    19: '19|-943,4062 -887,4055 -841,4049 -834,4046 -835,4041 -831,4037 -835,4024 -861,3984 -857,3979 -867,3970 -869,3973 -865,3999 -874,4007 -880,4014 -895,4017 -899,4025 -917,4033 -949,4037 -952,4052 -958,4051 -969,4054 -965,4061 -957,4064',
+    // Бразилия
+    20: '23|-6999,-7037 -6991,-7063 -6984,-7062 -6976,-7061 -6964,-7062 -6956,-7054 -6948,-7025 -6940,-6999 -6953,-6993 -6963,-6998 -6976,-7014 -6987,-7024 -6998,-7018 -6999,-7009 -6993,-7007 -6987,-7007 -6986,-7002 -6994,-6994 -6995,-6984 -6988,-6988 -6974,-6993 -6967,-6985 -6961,-6976 -6971,-6970 -6987,-6973 -6996,-6978 -7000,-6988 -7004,-7004 -7004,-7018',
+    // Абу-Даби
+    21: '24|6055,4700 6078,4703 6081,4706 6073,4727 6060,4733 6057,4738 6061,4755 6057,4783 6051,4785 6036,4742 6025,4711 6016,4687 6025,4677 6033,4663 6053,4649 6085,4633 6094,4634 6096,4638 6091,4645 6067,4648 6056,4654 6053,4665 6063,4667 6065,4677 6057,4679 6036,4677 6029,4686 6026,4695',
+};
+
+/**
+ * Car series and teams.
+ *   F1 team row: [name, power unit, aero, chassis, reliability, colour]   (values 0-100)
+ *   F2 team row: [name, car level, colour]   (all F2 cars share engine and chassis; level feeds aero, chassis, reliability)
+ * d sets how much the teams differ in pace: the F1 field is spread wider than the (spec) F2 field.
+ * Add a team by adding a row; add a series by adding a key (and an option in teamStats()).
+ */
+const SERIES = {
+    f1: {
+        n: 'F1 2020', // name
+        s: 'F1 20', // short label
+        k: 1, // pace factor relative to F1
+        d: .0011, // lap time lost per point of performance below 100 (fraction of the lap time)
+        x: 110, // maximum fuel load, kg
+        t: [
+        ['Mercedes', 98, 100, 96, 92, '#00d2be'],
+        ['Red Bull', 88, 92, 92, 84, '#1e41ff'],
+        ['McLaren', 82, 82, 84, 82, '#ff8700'],
+        ['Racing Point', 94, 85, 84, 80, '#f596c8'],
+        ['Renault', 78, 80, 80, 76, '#fff500'],
+        ['Ferrari', 76, 84, 82, 70, '#dc0000'],
+        ['AlphaTauri', 82, 76, 76, 76, '#4e7c9b'],
+        ['Alfa Romeo', 74, 72, 74, 72, '#9b0000'],
+        ['Haas', 74, 70, 72, 70, '#9ea3a8'],
+        ['Williams', 90, 58, 62, 74, '#00a0de'],
+        ],
+    },
+    f2: {
+        n: 'F2 2020', // name
+        s: 'F2 20', // short label
+        k: 1.115, // pace factor relative to F1
+        d: .0006, // lap time lost per point of performance below 100 (fraction of the lap time)
+        x: 80, // maximum fuel load, kg
+        t: [
+        ['Prema', 90, '#d4141c'],
+        ['UNI-Virtuosi', 88, '#1f3f8f'],
+        ['Carlin', 86, '#00a859'],
+        ['Hitech', 84, '#e7c500'],
+        ['ART', 82, '#b0b4ba'],
+        ['Campos', 80, '#f26522'],
+        ['MP Motorsport', 80, '#ff3d9a'],
+        ['DAMS', 78, '#0097d6'],
+        ['Charouz', 76, '#8bc34a'],
+        ['Trident', 74, '#7b1fa2'],
+        ],
+    },
+    f19: {
+        n: 'F2 2019', // name
+        s: 'F2 19', // short label
+        k: 1.12, // pace factor relative to F1
+        d: .0006, // lap time lost per point of performance below 100 (fraction of the lap time)
+        x: 80, // maximum fuel load, kg
+        t: [
+        ['Prema', 90, '#d4141c'],
+        ['Carlin', 88, '#00a859'],
+        ['UNI-Virtuosi', 86, '#1f3f8f'],
+        ['ART', 84, '#b0b4ba'],
+        ['DAMS', 82, '#0097d6'],
+        ['MP Motorsport', 80, '#ff3d9a'],
+        ['Campos', 78, '#f26522'],
+        ['Trident', 76, '#7b1fa2'],
+        ['Charouz', 74, '#8bc34a'],
+        ['HWA', 70, '#555b63'],
+        ],
+    },
+};
+
+/**
+ * Car setup sheet with the F1 2020 game ranges.
+ * Row: [key, label, min, max, step, default, group]
+ * Camber, toe and tyre pressures trade lap time against tyre wear (see TYRE_SETUP_KEYS in model/lap-model.js);
+ * all other values have a track specific ideal (see idealSetupValue).
+ */
+const SETUP_PARAMS = [
+    // --- Аэродинамика ---
+    ['fw', 'Переднее крыло', 0, 11, 1, 5, 'Аэродинамика'],
+    ['rw', 'Заднее крыло', 0, 11, 1, 7],
+    // --- Трансмиссия ---
+    ['dn', 'Дифференциал на газу, %', 50, 100, 1, 60, 'Трансмиссия'],
+    ['df', 'Дифференциал без газа, %', 50, 100, 1, 55],
+    // --- Геометрия подвески ---
+    ['fc', 'Развал спереди', -3.5, -2.5, 0.1, -3, 'Геометрия подвески'],
+    ['rc', 'Развал сзади', -2, -1, 0.1, -1.5],
+    ['ft', 'Схождение спереди', 0, 0.5, 0.01, 0.05],
+    ['rt', 'Схождение сзади', 0.2, 0.5, 0.01, 0.3],
+    // --- Подвеска ---
+    ['fs', 'Подвеска спереди', 1, 11, 1, 5, 'Подвеска'],
+    ['rs', 'Подвеска сзади', 1, 11, 1, 5],
+    ['fa', 'Стабилизатор спереди', 1, 11, 1, 5],
+    ['ra', 'Стабилизатор сзади', 1, 11, 1, 5],
+    ['fh', 'Клиренс спереди', 1, 11, 1, 3],
+    ['rh', 'Клиренс сзади', 1, 11, 1, 4],
+    // --- Тормоза ---
+    ['bp', 'Давление тормозов, %', 80, 100, 1, 95, 'Тормоза'],
+    ['bb', 'Баланс тормозов, %', 50, 70, 1, 58],
+    // --- Шины ---
+    ['pfl', 'Давление шин ПЛ, psi', 21, 25, 0.1, 22.5, 'Шины'],
+    ['pfr', 'Давление шин ПП, psi', 21, 25, 0.1, 22.5],
+    ['prl', 'Давление шин ЗЛ, psi', 19.5, 23.5, 0.1, 21],
+    ['prr', 'Давление шин ЗП, psi', 19.5, 23.5, 0.1, 21],
+];
+
+/**
+ * Tyre compounds. S/M/H are the soft/medium/hard tyres of the *current* track:
+ * applyTyreAllocation() (model/lap-model.js) fills in pace offset (o), wear (d), life (l) and name (n)
+ * from TYRE_ALLOCATION and the tables below.
+ */
+const TYRES = {
+    S: { c: '#e53935', n: 'Софт' },
+    M: { c: '#fdd835', n: 'Медиум' },
+    H: { c: '#cfd3d8', n: 'Хард' },
+    // wet-weather tyres: fixed values, their pace depends on the weather (see data/weather.js)
+    I: { c: '#43a047', n: 'Интер', o: 0, d: .03, l: 38 },
+    W: { c: '#1e88e5', n: 'Дождевые', o: 0, d: .025, l: 45 },
+};
+
+// Per C-number (C1..C5): seconds lost per lap and per lap of age, and life in laps at wear factor 1.
+const TYRE_DEGRADATION = [0.016, 0.022, 0.034, 0.055, 0.09];
+const TYRE_LIFE = [62, 48, 34, 22, 15];
+
+/**
+ * Weather scenarios.
+ *
+ * WEATHER_MODES: the three conditions of the race screen.
+ *   risk  how much more often drivers make mistakes and touch each other      grip  tyre grip on the surface (corner speed)
+ *   wing  extra wing the car needs
+ * WEATHER_TRACK[i] (same order as TRACKS): [pace loss on a damp track %, pace loss in rain %, track risk factor, what makes the track special when wet].
+ */
+const WEATHER_MODES = {
+    dry: { icon: '☀️', name: 'Сухо', short: 'СУХО', risk: 1, grip: 1, wing: 0 },
+    damp: { icon: '🌦', name: 'Сыро', short: 'СЫРО', risk: 1.5, grip: .8, wing: 1 },
+    rain: { icon: '🌧', name: 'Дождь', short: 'ДОЖДЬ', risk: 2.2, grip: .6, wing: 2 },
+};
+
+const WEATHER_TRACK = [
+    [6, 13, 1.0, 'гладкий городской асфальт, мало сцепления на мокром'], // Австралия
+    [6, 12, 1.0, 'песок на трассе, дождь редкость — асфальт скользкий'], // Бахрейн
+    [6.5, 14, 1.2, 'городская трасса с неровностями, много луж'], // Вьетнам
+    [5.5, 12, 1.0, 'длинные повороты копят воду, аквапланирование на прямых'], // Китай
+    [5, 11, 1.0, 'виражи с наклоном держат воду, обгонять трудно'], // Нидерланды
+    [5, 11, 0.9, 'открытая трасса, порывистый ветер'], // Испания
+    [7, 16, 1.4, 'узкие улицы, разметка и люки скользкие, стены рядом'], // Монако
+    [6.5, 15, 1.3, 'узкие участки у стен, аквапланирование на длинной прямой'], // Азербайджан
+    [6, 13, 1.3, 'стены у шикан, быстро подсыхает'], // Канада
+    [5, 11, 0.9, 'гладкий абразивный асфальт, большие зоны схода'], // Франция
+    [5, 11, 0.9, 'быстро просыхает, перепады высот'], // Австрия
+    [5.5, 12, 1.1, 'быстрые повороты, ветер и аквапланирование'], // Великобритания
+    [5.5, 12, 1.0, 'трудно обгонять, сухая линия узкая'], // Венгрия
+    [6, 14, 1.2, 'дождь бывает только на части круга, Эйр-Руж опасен'], // Бельгия
+    [5.5, 12, 1.1, 'низкий прижим, скользко на торможениях и в шиканах'], // Италия
+    [6, 14, 1.3, 'тропические ливни, высокая влажность'], // Сингапур
+    [6, 13, 1.1, 'скользкое покрытие, длинные повороты'], // Россия
+    [5.5, 13, 1.2, 'быстрые повороты, 130R и Дегнер особенно опасны'], // Япония
+    [5.5, 12, 1.0, 'перепады высот и ухабы, линия быстро подсыхает'], // США
+    [5.5, 12, 1.0, 'разреженный воздух, мало сцепления и прижима'], // Мексика
+    [5.5, 12, 1.1, 'ручей пересекает трассу, погода меняется'], // Бразилия
+    [5, 11, 0.9, 'дождь редкость, песок на гладком покрытии'], // Абу-Даби
+];
+
+// Seconds per 90 s lap lost by a tyre that does not fit the weather (the fitting tyre loses nothing).
+const COMPOUND_WEATHER_OFFSET = {
+    dry: { S: 0, M: 0, H: 0, I: 10, W: 22 },
+    damp: { I: 0, W: 2.5, S: 5.5, M: 6.5, H: 7.5 },
+    rain: { W: 0, I: 4.5, S: 16, M: 17, H: 18 },
+};
+
+// Wear multiplier of a compound in the weather: wet tyres overheat on a dry track, slicks hardly wear in the wet.
+const COMPOUND_WEATHER_WEAR = {
+    dry: { I: 3, W: 4 },
+    damp: { W: 2.5, S: .6, M: .5, H: .5 },
+    rain: { I: 1.4, S: .5, M: .4, H: .4 },
+};
+
+// Compounds the strategy search tries in each weather.
+const COMPOUND_SETS = { dry: 'SMH', damp: 'ISM', rain: 'WI' };
+
+/**
+ * Surroundings of every track (index = track number).
+ *   ground   colour of the ground
+ *   around   what surrounds the track: 'forest' | 'park' (a few trees) | 'city' (buildings) | 'sand' (desert scrub)
+ *   pal      'glass' = dark glass towers instead of ordinary buildings
+ *   edge     run-off colour: 'sand', or 'ricard' (the blue and red stripes of Paul Ricard)
+ *   sea      {dir, gap} sea beyond the track's bounding box: dir N/E/S/W, gap in metres from the outermost track point
+ *   lake     [x, y, rx, ry] lake as fractions of the track's bounding box (centre and radii)
+ *   stands   [lap position 0-1, side (1 right / -1 left / 0 both), length in m] grandstands
+ *   extras   ['wheel' | 'tower' | 'stadium' | 'hotel', x, y] landmarks as fractions of the bounding box (moved clear of the track if needed)
+ */
+const ENVIRONMENT = [
+    { ground: '#4f8f52', around: 'park', lake: [.5, .5, .28, .3], stands: [[0, 0, 300], [.2, -1, 120], [.62, 1, 120]] }, // Австралия
+    { ground: '#d6bf86', around: 'sand', edge: 'sand', stands: [[0, 0, 420], [.05, -1, 180], [.3, 1, 160], [.72, 1, 160]] }, // Бахрейн
+    { ground: '#7a8b7c', around: 'city', stands: [[0, 0, 300], [.45, 1, 150]], extras: [['stadium', .15, .35]] }, // Вьетнам
+    { ground: '#5f9b57', around: 'park', stands: [[0, 0, 520], [.12, 1, 200], [.55, -1, 160], [.8, 1, 160]] }, // Китай
+    { ground: '#e3d3a0', around: 'sand', edge: 'sand', sea: { dir: 'W', gap: 700 }, stands: [[0, 0, 320], [.2, 1, 140], [.48, -1, 160], [.7, 1, 140], [.9, -1, 140]] }, // Нидерланды
+    { ground: '#8da562', around: 'park', stands: [[0, 0, 520], [.06, -1, 260], [.35, 1, 180], [.62, -1, 180], [.9, 1, 160]] }, // Испания
+    { ground: '#9a9ea6', around: 'city', sea: { dir: 'S', gap: 60 }, stands: [[0, 1, 160], [.55, -1, 120], [.85, 1, 100]] }, // Монако
+    { ground: '#b9ae95', around: 'city', sea: { dir: 'S', gap: 80 }, stands: [[0, 0, 300], [.4, -1, 120]] }, // Азербайджан
+    { ground: '#4d8a4b', around: 'forest', sea: { dir: 'E', gap: 140 }, stands: [[0, 0, 260], [.18, 1, 140], [.9, -1, 160]] }, // Канада
+    { ground: '#b7a77c', around: 'sand', edge: 'ricard', stands: [[0, 0, 360], [.45, 1, 160], [.7, -1, 140]] }, // Франция
+    { ground: '#4b8f45', around: 'forest', stands: [[0, 0, 320], [.3, 1, 200], [.62, -1, 180]] }, // Австрия
+    { ground: '#5d9a4a', around: 'park', stands: [[0, 0, 520], [.12, -1, 260], [.28, 1, 200], [.55, 1, 180], [.82, -1, 200]] }, // Великобритания
+    { ground: '#a2a869', around: 'park', stands: [[0, 0, 320], [.15, -1, 160], [.5, 1, 160]] }, // Венгрия
+    { ground: '#3f7a41', around: 'forest', stands: [[0, 0, 320], [.08, -1, 160], [.2, 1, 220], [.35, -1, 140]] }, // Бельгия
+    { ground: '#4b8a45', around: 'forest', stands: [[0, 0, 600], [.08, 1, 300], [.9, -1, 360], [.55, 1, 200]] }, // Италия
+    { ground: '#505560', around: 'city', pal: 'glass', lake: [.6, .45, .18, .2], stands: [[0, 0, 360], [.3, 1, 200], [.55, -1, 200], [.8, 1, 200]], extras: [['wheel', .7, .15]] }, // Сингапур
+    { ground: '#7f9a6a', around: 'city', stands: [[0, 0, 360], [.3, 1, 160]], extras: [['stadium', .35, .4]] }, // Россия
+    { ground: '#3f7f45', around: 'forest', stands: [[0, 0, 380], [.35, 1, 160], [.55, -1, 160], [.88, 1, 200]], extras: [['wheel', .62, .45]] }, // Япония
+    { ground: '#9aa860', around: 'park', stands: [[0, 0, 380], [.04, 1, 260], [.7, -1, 200], [.85, 1, 200]], extras: [['tower', .5, .5]] }, // США
+    { ground: '#5b8f55', around: 'city', lake: [.45, .7, .14, .12], stands: [[0, 0, 340], [.25, 1, 160]], extras: [['stadium', .78, .45]] }, // Мексика
+    { ground: '#4d8c4a', around: 'park', stands: [[0, 0, 380], [.2, 1, 200], [.45, -1, 200], [.7, 1, 160]] }, // Бразилия
+    { ground: '#d8c796', around: 'sand', edge: 'sand', sea: { dir: 'S', gap: 150 }, stands: [[0, 0, 420], [.35, -1, 200], [.62, 1, 200], [.8, -1, 160]], extras: [['hotel', .5, .2]] }, // Абу-Даби
+];
+/**
+ * Russian -> English UI dictionary: [russian, english].
+ * Partial phrases are fine: text is translated by substring replacement, longest phrase first.
+ * Numbers + units ("12 с", "78 кр.") are handled by regular expressions in translate().
+ */
+const DICTIONARY_PAIRS = [
+    ["Камера следует за выбранным болидом (выбор — чипы сверху); кнопка", "The camera follows the selected car (choose it with the chips above); the button"],
+    ["переключает на всю трассу.", "switches to the whole track."],
+    ["Белая черта — старт/финиш, жёлтая и синяя — границы секторов, зелёная полоса — зоны DRS", "The white line is start/finish, yellow and blue mark sector borders, the green stripe is the DRS zones"],
+    ["Справа вверху мини-карта.", "Mini-map at the top right."],
+    ["Жёлтая линия — оптимальная траектория, бледная белая — реальная линия проезда.", "Yellow line: optimal racing line; faint white line: the line the cars actually take."],
+    ["Слева у старта — питлейн с боксами (лимит 80 км/ч).", "The pit lane with garages is by the start line (80 km/h limit)."],
+    ["Болиды заезжают в боксы по своей стратегии (вкладка «Стратегия»).", "Cars pit according to their own strategy (Strategy tab)."],
+    ["Старт на шинах и пит-стопы — по стратегии каждого болида (вкладка «Стратегия»); дистанция", "Starting tyres and pit stops follow each car's strategy (Strategy tab); distance"],
+    ["кр., заезд завершится на финише.", "laps, the race ends at the finish."],
+    ["Время круга по ходу гонки (пики пит-стопов обрезаны), фон — состав шин", "Lap time through the race (pit-stop spikes clipped), background: tyre compound"],
+    ["Время круга (пики пит-стопов обрезаны), фон — шины", "Lap time (pit-stop spikes clipped), background: tyres"],
+    ["В сухой гонке нужно минимум два разных состава шин", "A dry race requires at least two different tyre compounds"],
+    ["Добавьте болид во вкладке «Болид».", "Add a car in the “Car” tab."],
+    ["Обг.: совершено / потеряно позиций", "Overtakes: made / positions lost"],
+    ["Стартовая решётка и прогноз круга", "Starting grid and lap forecast"],
+    [" (равная мощность: значения команд не учитываются, настройки сохраняются)", " (equal power: team values are ignored, setups are kept)"],
+    ["Подобрать настройки под трассу", "Auto-set setup for the track"],
+    ["Найти оптимальную стратегию", "Find the optimal strategy"],
+    ["Вызвать в боксы / отменить", "Call to pit / cancel"],
+    ["Сравнение болидов в гараже", "Garage cars comparison"],
+    ["Последний пит-стоп: питлейн", "Last pit stop: pit lane"],
+    ["Выезд из боксов · питлейн", "Leaving the pits · pit lane"],
+    ["Питлейн (лимит 80 км/ч):", "Pit lane (80 km/h limit):"],
+    ["Стоянка в боксах:", "Stationary in the box:"],
+    ["заявка на заезд", "pit requested"],
+    ["Заезд на пит-стоп, круг", "Pit-in lap"],
+    ["Характеристики болида", "Car characteristics"],
+    ["Дифференциал без газа, %", "Off-throttle differential, %"],
+    ["Дифференциал на газу, %", "On-throttle differential, %"],
+    ["Давление тормозов, %", "Brake pressure, %"],
+    ["Баланс тормозов, %", "Brake bias, %"],
+    ["Давление шин ПЛ, psi", "Tyre pressure FL, psi"],
+    ["Давление шин ПП, psi", "Tyre pressure FR, psi"],
+    ["Давление шин ЗЛ, psi", "Tyre pressure RL, psi"],
+    ["Давление шин ЗП, psi", "Tyre pressure RR, psi"],
+    ["Стабилизатор спереди", "Front anti-roll bar"],
+    ["Стабилизатор сзади", "Rear anti-roll bar"],
+    ["Схождение спереди", "Front toe"],
+    ["Схождение сзади", "Rear toe"],
+    ["Развал спереди", "Front camber"],
+    ["Развал сзади", "Rear camber"],
+    ["Подвеска спереди", "Front suspension"],
+    ["Подвеска сзади", "Rear suspension"],
+    ["Клиренс спереди", "Front ride height"],
+    ["Клиренс сзади", "Rear ride height"],
+    ["Переднее крыло", "Front wing"],
+    ["Заднее крыло", "Rear wing"],
+    ["Силовая установка", "Power unit"],
+    ["Аэродинамика", "Aerodynamics"],
+    ["Надёжность", "Reliability"],
+    ["Трансмиссия", "Transmission"],
+    ["Тормоза и шины", "Brakes and tyres"],
+    ["Геометрия", "Geometry"],
+    ["Подвеска", "Suspension"],
+    ["Шасси", "Chassis"],
+    ["Мощность болидов:", "Car power:"],
+    ["реальная", "real"],
+    ["равная", "equal"],
+    ["Добавить болид", "Add a car"],
+    ["Добавить", "Add"],
+    ["Копия", "Copy"],
+    ["Удалить", "Delete"],
+    ["Сбросить", "Reset"],
+    ["Скорость", "Speed"],
+    ["Стратегия", "Strategy"],
+    ["Тест скорости:", "Speed test:"],
+    ["Дистанция гонки", "Race distance"],
+    ["Пит-стопы:", "Pit stops:"],
+    ["Стинт", "Stint"],
+    ["Софт", "Soft"],
+    ["Медиум", "Medium"],
+    ["Хард", "Hard"],
+    ["Время гонки", "Race time"],
+    ["Средний круг", "Average lap"],
+    ["пит-стопы", "pit stops"],
+    ["риск отказа", "failure risk"],
+    ["Топливо, кг", "Fuel, kg"],
+    ["Пауза", "Pause"],
+    ["Старт P", "Start P"],
+    ["Старт", "Start"],
+    ["Финиш: победитель", "Finish: winner"],
+    ["Финиш", "Finish"],
+    ["Сброс", "Reset"],
+    ["Итоги", "Results"],
+    ["За болидом", "Follow car"],
+    ["Вся трасса", "Whole track"],
+    ["Телеметрия:", "Telemetry:"],
+    ["передача", "gear"],
+    ["Газ", "Throttle"],
+    ["Тормоз", "Brake"],
+    ["Энергия", "Energy"],
+    ["Шины:", "Tyres:"],
+    ["Шины", "Tyres"],
+    ["Положение в гонке", "Race positions"],
+    ["Болид", "Car"],
+    ["Лидер", "Leader"],
+    ["Впереди", "Ahead"],
+    ["Кр.", "Lap"],
+    ["Лучший круг:", "Best lap:"],
+    ["Лучший", "Best"],
+    ["Круг", "Lap"],
+    ["круг", "lap"],
+    ["Прошлый:", "Previous:"],
+    ["Сейчас:", "Now:"],
+    ["С1", "S1"],
+    ["С2", "S2"],
+    ["С3", "S3"],
+    ["Пит", "Pit"],
+    ["Обг.", "Ovt."],
+    ["Анализ болида", "Car analysis"],
+    ["Закрыть", "Close"],
+    ["Время / отрыв", "Time / gap"],
+    ["Стоп", "Stop"],
+    ["Питлейн", "Pit lane"],
+    ["Стоянка", "Stationary"],
+    ["Позиция по кругам", "Position by lap"],
+    ["износ шин", "tyre wear"],
+    ["износ", "wear"],
+    ["стинт", "stint"],
+    ["пит на круге", "pit on lap"],
+    ["на круге", "on lap"],
+    ["атакует", "attacks"],
+    ["обошёл", "passed"],
+    ["деплой", "deploy"],
+    ["по плану", "planned"],
+    ["атака", "attack"],
+    ["рекуперация", "harvesting"],
+    ["заряд", "charge"],
+    [" → финиш P", " → finish P"],
+    ["без изменений", "no change"],
+    ["мест", "places"],
+    ["обгонов совершено", "overtakes made"],
+    ["позиций потеряно", "positions lost"],
+    ["Темп: лучший круг", "Pace: best lap"],
+    ["в среднем", "on average"],
+    ["с/кр. к лидеру.", "s/lap vs the leader."],
+    ["лучший средний темп среди финишировавших.", "best average pace among the finishers."],
+    ["Шины: к концу стинтов темп меняется на", "Tyres: by the end of stints the pace changes by"],
+    ["с/кр.", "s/lap"],
+    ["далее", "next"],
+    ["пит-стопов не было", "no pit stops"],
+    ["Режим: полный газ", "Driving: full throttle"],
+    ["времени, торможение", "of the time, braking"],
+    ["макс. скорость", "top speed"],
+    ["средняя", "average"],
+    ["ERS: потрачено", "ERS: spent"],
+    ["заряда, рекуперировано", "of charge, harvested"],
+    ["в конце", "at the end"],
+    ["У F2 нет ERS.", "F2 has no ERS."],
+    ["отставание от", "gap to"],
+    ["интервал до", "interval to"],
+    ["лидер", "leader"],
+    ["питлейн", "pit lane"],
+    ["стоянка", "stationary"],
+    ["стоп", "stop"],
+    ["км/ч", "km/h"],
+    ["км", "km"],
+    ["поворотов", "corners"],
+    ["полный газ", "full throttle"],
+    ["прижим", "downforce"],
+    ["обгоны", "overtaking"],
+    ["чистый круг", "clean lap"],
+    ["потери из-за настроек", "setup loss"],
+    ["мощность", "power"],
+    ["л.с.", "hp"],
+    ["Инженер-стратег", "Race Engineer"],
+    ["Начать", "Start"],
+    ["Стратегия гонки (как в игре)", "Race strategy (as in the game)"],
+    ["Топливная смесь", "Fuel mix"],
+    ["Бедная", "Lean"],
+    ["Стандарт", "Standard"],
+    ["Богатая", "Rich"],
+    ["Максимум", "Max"],
+    ["Режим ERS", "ERS mode"],
+    ["Нет", "None"],
+    ["Средний", "Medium"],
+    ["Обгон", "Overtake"],
+    ["Хотлэп", "Hotlap"],
+    ["Топливо на старте, кг", "Fuel at start, kg"],
+    ["Нужно на гонку", "Needed for the race"],
+    ["запас", "spare"],
+    ["не хватит", "short by"],
+    ["Авто-топливо", "Auto fuel"],
+    ["Топливо на финише:", "Fuel at the finish:"],
+    ["Топлива не хватит до финиша", "Not enough fuel to reach the finish"],
+    ["Геометрия подвески", "Suspension geometry"],
+    ["Тормоза", "Brakes"],
+    ["низкий", "low"],
+    ["средний", "medium"],
+    ["высокий", "high"],
+    ["Тема", "Theme"],
+    ["Система", "System"],
+    ["Как в системе", "Same as system"],
+    ["Белая", "White"],
+    ["Чёрная", "Black"],
+    ["Тест", "Test"],
+    ["Язык", "Language"],
+    ["Расставить по темпу", "Set grid by pace"],
+    ["Австралия", "Australia"],
+    ["Бахрейн", "Bahrain"],
+    ["Вьетнам", "Vietnam"],
+    ["Китай", "China"],
+    ["Нидерланды", "Netherlands"],
+    ["Испания", "Spain"],
+    ["Монако", "Monaco"],
+    ["Азербайджан", "Azerbaijan"],
+    ["Канада", "Canada"],
+    ["Франция", "France"],
+    ["Австрия", "Austria"],
+    ["Великобритания", "Great Britain"],
+    ["Венгрия", "Hungary"],
+    ["Бельгия", "Belgium"],
+    ["Италия", "Italy"],
+    ["Сингапур", "Singapore"],
+    ["Россия", "Russia"],
+    ["Япония", "Japan"],
+    ["США", "USA"],
+    ["Мексика", "Mexico"],
+    ["Бразилия", "Brazil"],
+    ["Абу-Даби", "Abu Dhabi"],
+    ["Мой гоночный плейлист", "My racing playlist"],
+    ["шины", "tyres"],
+    ["Имя пилота (необязательно)", "Driver name (optional)"],
+    ["Имя", "Name"],
+    ["КРУГ", "LAP"],
+    ["ФИНИШ", "FINISH"],
+    ["ПИТ", "PIT"],
+    ["ЛИДЕР", "LEADER"],
+    ["ИНТЕРВАЛ", "INTERVAL"],
+    ["ОТРЫВ", "GAP"],
+    ["Реалистичная езда: ошибок", "Realistic driving: mistakes"],
+    ["Реалистичная езда", "Realistic driving"],
+    ["выехал за пределы трассы", "goes off the track"],
+    ["ошибка на торможении", "braking error"],
+    ["медленный пит-стоп", "slow pit stop"],
+    ["потери ≈", "time lost ≈"],
+    ["разброс темпа", "pace spread"],
+    ["Действует при включённой реалистичной езде.", "Works when realistic driving is on."],
+    ["Аварии и DNF", "Crashes and DNF"],
+    ["технический отказ", "technical failure"],
+    ["двигатель", "power unit"],
+    ["коробка передач", "gearbox"],
+    ["гидравлика", "hydraulics"],
+    ["перегрев тормозов", "brake overheating"],
+    ["система ERS", "ERS system"],
+    [", сход", ", retired"],
+    ["авария, сход с гонки", "crash, retired from the race"],
+    ["контакт, сход с гонки", "contact, retired from the race"],
+    ["контакт:", "contact:"],
+    ["повреждение переднего крыла", "front wing damage"],
+    ["прокол", "puncture"],
+    ["Сход на круге", "Retired on lap"],
+    ["Кнопки: ▶ старт/пауза · ↺ сброс · скорость симуляции · ＋/－ масштаб · 📹 камера за болидом · 🌦 погода (сухо/сыро/дождь) · 🧑 реалистичная езда · 💥 аварии и DNF · 🛠 заезд в боксы · 📊 итоги. Камера следует за выбранным болидом (выбор — чипы сверху или строка таймтаблицы). Белая черта — старт/финиш, жёлтая и синяя — границы секторов, зелёная полоса — зоны DRS. Жёлтая линия — оптимальная траектория, бледная белая — реальная линия проезда. Слева у старта — питлейн с боксами (лимит 80 км/ч). Болиды заезжают в боксы по своей стратегии (вкладка «Стратегия»). Уровень пилота задаётся при добавлении болида.", "Buttons: ▶ start/pause · ↺ reset · simulation speed · ＋/－ zoom · 📹 follow the car · 🌦 weather (dry/damp/rain) · 🧑 realistic driving · 💥 crashes and DNF · 🛠 call to the pits · 📊 results. The camera follows the selected car (choose it with the chips above or a timing tower row). White line: start/finish, yellow and blue: sector borders, green stripe: DRS zones. Yellow line: optimal racing line, faint white line: the line the cars actually take. The pit lane with garages is beside the start line (80 km/h limit). Cars pit according to their own strategy (Strategy tab). The pilot level is set when a car is added."],
+    ["EXP — опыт · RAC — гоночное мастерство · AWA — осознанность · PAC — скорость · RTG — общий рейтинг (считается сам). Значения 1–99, действуют при включённой реалистичной езде.", "EXP: experience · RAC: racecraft · AWA: awareness · PAC: pace · RTG: overall rating (calculated automatically). Values 1–99, they apply while realistic driving is on."],
+    ["Сохранённые настройки", "Saved setups"],
+    ["Сохранить", "Save"],
+    ["Загрузить", "Load"],
+    ["нет сохранённых", "none saved"],
+    ["Сохраняются сетап и стратегия гонки (без пилота), хранятся в этом браузере. Загрузка применяется к выбранному болиду.", "The setup and the race strategy are saved (not the pilot) in this browser. Loading applies to the selected car."],
+    ["Сохранено:", "Saved:"],
+    ["Загружено:", "Loaded:"],
+    ["Удалено:", "Deleted:"],
+    ["штрафы стюардов", "steward penalties"],
+    ["штраф", "penalty"],
+    ["выезд за пределы трассы", "leaving the track"],
+    ["контакт", "contact"],
+    ["Пилот: RTG", "Pilot: RTG"],
+    ["Настройки", "Settings"],
+    ["Громкость", "Volume"],
+    ["Звук: двигатель выбранного болида и сигналы событий гонки (обгон, пит-стоп, авария, финиш).", "Sound: the engine of the selected car and race event cues (overtake, pit stop, crash, finish)."],
+    ["Погода", "Weather"],
+    ["Сухо", "Dry"],
+    ["Сыро", "Damp"],
+    ["Дождь", "Rain"],
+    ["СУХО", "DRY"],
+    ["СЫРО", "DAMP"],
+    ["ДОЖДЬ", "RAIN"],
+    ["Интер", "Inter"],
+    ["Дождевые", "Wet"],
+    ["Сухая трасса: полный темп, шины", "Dry track: full pace, tyres"],
+    ["Сыро: темп", "Damp: pace"],
+    ["Дождь: темп", "Rain: pace"],
+    ["риск ошибок", "mistake risk"],
+    ["лучше Интер", "Inters are best"],
+    ["DRS выключен", "DRS disabled"],
+    ["нужны дождевые шины", "full wet tyres needed"],
+    ["гладкий городской асфальт, мало сцепления на мокром", "smooth park-road asphalt, little grip when wet"],
+    ["песок на трассе, дождь редкость — асфальт скользкий", "sand on the track, rain is rare so the asphalt is slippery"],
+    ["городская трасса с неровностями, много луж", "street circuit with bumps and many puddles"],
+    ["длинные повороты копят воду, аквапланирование на прямых", "long corners hold water, aquaplaning on the straights"],
+    ["виражи с наклоном держат воду, обгонять трудно", "banked corners hold water, overtaking is hard"],
+    ["открытая трасса, порывистый ветер", "open circuit with gusty wind"],
+    ["узкие улицы, разметка и люки скользкие, стены рядом", "narrow streets, slippery paint and manhole covers, walls close by"],
+    ["узкие участки у стен, аквапланирование на длинной прямой", "narrow sections by the walls, aquaplaning on the long straight"],
+    ["стены у шикан, быстро подсыхает", "walls beside the chicanes, dries quickly"],
+    ["гладкий абразивный асфальт, большие зоны схода", "smooth abrasive asphalt, huge run-off areas"],
+    ["быстро просыхает, перепады высот", "dries quickly, big elevation changes"],
+    ["быстрые повороты, ветер и аквапланирование", "fast corners, wind and aquaplaning"],
+    ["трудно обгонять, сухая линия узкая", "hard to overtake, the dry line is narrow"],
+    ["дождь бывает только на части круга, Эйр-Руж опасен", "rain can fall on only part of the lap, Eau Rouge is dangerous"],
+    ["низкий прижим, скользко на торможениях и в шиканах", "low downforce, slippery under braking and in the chicanes"],
+    ["тропические ливни, высокая влажность", "tropical downpours, high humidity"],
+    ["скользкое покрытие, длинные повороты", "slippery surface, long corners"],
+    ["быстрые повороты, 130R и Дегнер особенно опасны", "fast corners, 130R and Degner are especially dangerous"],
+    ["перепады высот и ухабы, линия быстро подсыхает", "elevation changes and bumps, the line dries quickly"],
+    ["разреженный воздух, мало сцепления и прижима", "thin air, little grip and downforce"],
+    ["ручей пересекает трассу, погода меняется", "a stream crosses the track, the weather changes"],
+    ["дождь редкость, песок на гладком покрытии", "rain is rare, sand on a smooth surface"],
+];
+
+/**
+ * Pilot ratings, 1-99, like the stats on a driver card:
+ *   EXP  experience     RAC  racecraft     AWA  awareness     PAC  pace
+ *   RTG  overall rating, calculated from the four (pace counts the most; rookies with low EXP lose a little).
+ * The ratings change the driving only while "realistic driving" is on - see driverTraits() in simulation.js.
+ */
+const PILOT_STATS = [
+    // [key, short code, name]
+    ['exp', 'EXP', 'Опыт (Experience)'],
+    ['rac', 'RAC', 'Гоночное мастерство (Racecraft)'],
+    ['awa', 'AWA', 'Осознанность (Awareness)'],
+    ['pac', 'PAC', 'Скорость (Pace)'],
+];
+
+// 70 everywhere: all pilots are about equal until you change the ratings.
+const PILOT_DEFAULT = { exp: 70, rac: 70, awa: 70, pac: 70 };
+
+const pilotRating = p => Math.round(.4 * p.pac + .25 * p.rac + .2 * p.awa + .15 * p.exp);
+
+/**
+ * Cars in the garage.
+ * 
+ * A car object (makeCar):
+ *   id     unique id            s     series key: 'f1' | 'f2' | 'f19'
+ *   name   optional name given by the user (shown in tables, chips and the timing tower)
+ *   pil    pilot ratings {exp, rac, awa, pac} 1-99 (see model/pilot.js); only used while realistic driving is on
+ *   t      team index in SERIES[s].t
+ *   st     [power unit, aero, chassis, reliability] 0-100
+ *   su     setup values, keyed by SETUP_PARAMS[i][0]
+ *   grid   starting position, 0 = pole
+ *   str    race strategy: c = compounds per stint ('S'|'M'|'H'), f = pit laps as fractions of the race,
+ *          fm = fuel mix (L|S|R|X), er = ERS mode (N|M|O|H), fl = start fuel in kg (null = automatic)
+ */
+
+const teamStats = (s, i) => {
+    const t = SERIES[s].t[i];
+    return s == 'f1' ? t.slice(1, 5) : [80, t[1], t[1], t[1]];
+};
+
+const teamColor = c => {
+    const t = SERIES[c.s].t[c.t];
+    return t[t.length - 1];
+};
+
+// Label used in chips and tables: the given name plus the team, or series + team when there is no name.
+const carLabel = c => c.name ? `${c.name} (${SERIES[c.s].t[c.t][0]})` : SERIES[c.s].s + ' ' + SERIES[c.s].t[c.t][0];
+
+// Three-letter code for the map and the timing tower.
+const carShort = c => (c.name || SERIES[c.s].t[c.t][0]).replace(/\s+/g, '').slice(0, 3).toUpperCase();
+
+// Names are inserted into HTML, so strip the characters that could break it.
+const cleanName = v => v.replace(/[<>&"']/g, '').trim().slice(0, 14);
+
+const makeCar = (s, i, name = '', pil = null) => ({
+    id: ++nextCarId, name, pil: { ...PILOT_DEFAULT, ...pil }, s, t: i, st: teamStats(s, i), su: Object.fromEntries(SETUP_PARAMS.map(d => [d[0], d[5]])), str: {
+        c: ['M', 'H'], f: [.45 + (Math.random() - .5) * .12],   // default one-stop plan; the pit lap differs a little from car to car
+         fm: 'S', er: 'M', fl: null
+    }
+});
+
+const currentCar = () => state.cars[state.a];
+
+const horsepower = c => c.s == 'f1' ? Math.round(760 + 2.5 * effectiveStats(c)[0]) : 620;
+
+const effectiveStats = c => state.eq ? [80, 80, 80, 80] : c.st;
+
+const normalizeGrid = () => [...state.cars].sort((a, b) => a.grid - b.grid).forEach((c, i) => c.grid = i);
+
+/**
+ * Weather model. state.weather is 'dry', 'damp' or 'rain' (data in data/weather.js).
+ * It changes the lap time, tyre choice and wear, grip (corner speeds), risk of mistakes and contacts,
+ * DRS (off in rain) and the spray that makes following harder.
+ */
+const weatherMode = () => WEATHER_MODES[state.weather];
+const weatherLoss = i => state.weather == 'dry' ? 0 : WEATHER_TRACK[i][state.weather == 'damp' ? 0 : 1] / 100;
+const weatherRisk = i => state.weather == 'dry' ? 1 : weatherMode().risk * WEATHER_TRACK[i][2];
+const weatherGrip = () => weatherMode().grip;
+const weatherTyreOffset = m => COMPOUND_WEATHER_OFFSET[state.weather][m];
+const weatherTyreWear = m => COMPOUND_WEATHER_WEAR[state.weather][m] || 1;
+
+function weatherNote(i) {
+    if (state.weather == 'dry') return 'Сухая трасса: полный темп, шины Софт/Медиум/Хард.';
+    const t = WEATHER_TRACK[i], loss = t[state.weather == 'damp' ? 0 : 1], risk = weatherRisk(i).toFixed(1);
+    return state.weather == 'damp'
+        ? `Сыро: темп −${loss}%, риск ошибок ×${risk}, лучше Интер; ${t[3]}.`
+        : `Дождь: темп −${loss}%, риск ошибок ×${risk}, DRS выключен, нужны дождевые шины; ${t[3]}.`;
+}
+
+// Put a car's strategy on tyres that fit the weather (teams would do the same when the weather changes).
+function adaptStrategy(c) {
+    const w = state.weather;
+    c.str.c = c.str.c.map(m => w == 'dry' ? (m == 'I' || m == 'W' ? 'M' : m) : w == 'damp' ? 'I' : 'W');
+    if (w == 'dry' && new Set(c.str.c).size < 2) c.str.c[c.str.c.length - 1] = 'H';
+}
+
+function setWeather(w) {
+    state.weather = w;
+    state.cars.forEach(adaptStrategy);
+    render();
+}
+
+function cycleWeather() {
+    setWeather({ dry: 'damp', damp: 'rain', rain: 'dry' }[state.weather]);
+}
+
+/**
+ * Lap time, tyre wear and fuel model.
+ * 
+ * Lap time = track reference time * series factor * (1 + performance deficit)
+ *            + setup penalty + tyre loss + fuel effect + fuel-mix / ERS-mode delta.
+ * simulateRace() sums that over the whole race for a given strategy and is what the strategy tab uses.
+ */
+
+const powerWeight = i => Math.min(.46, Math.max(.2, .2 + (TRACKS[i][TRACK.FULL_THROTTLE] - 40) * .0065));
+
+function applyTyreAllocation() {
+    const a = TYRE_ALLOCATION[state.tr];
+    ['H', 'M', 'S'].forEach((k, j) => {
+        const n = a[j];
+        TYRES[k].d = TYRE_DEGRADATION[n - 1];
+        TYRES[k].l = TYRE_LIFE[n - 1];
+        TYRES[k].o = (a[2] - n) * .55;
+        TYRES[k].n = ({ S: 'Софт', M: 'Медиум', H: 'Хард' })[k] + ' (C' + n + ')';
+    });
+}
+
+const raceLaps = () => Math.max(3, Math.round(TRACKS[state.tr][TRACK.LAPS] * state.pct / 100));
+
+// Setup values that trade lap time against tyre wear (camber, toe, tyre pressure).
+const TYRE_SETUP_KEYS = ['fc', 'rc', 'ft', 'rt', 'pfl', 'pfr', 'prl', 'prr'];
+
+const setupAggression = c => {
+    const n = k => {
+        const d = SETUP_PARAMS.find(x => x[0] == k);
+        return (c.su[k] - d[2]) / (d[3] - d[2]);
+    };
+    return ((1 - n('fc')) + (1 - n('rc')) + n('ft') + n('rt') + (1 - n('pfl')) + (1 - n('pfr')) + (1 - n('prl')) + (1 - n('prr'))) / 8;
+};
+
+const tyreWearFactor = c => .85 + .35 * setupAggression(c);
+
+const idealSetupValue = (d, i) => {
+    const k = d[0];
+    if (k == 'fw')
+        return clamp(Math.round(TRACKS[i][TRACK.DOWNFORCE] * 2 - 1) + weatherMode().wing, 0, 11);
+    if (k == 'rw')
+        return clamp(Math.round(TRACKS[i][TRACK.DOWNFORCE] * 2.4 - .5) + weatherMode().wing, 0, 11);
+    if (TYRE_SETUP_KEYS.includes(k)) {
+        const a = clamp(.7 - (TRACKS[i][TRACK.TYRE_WEAR] - 1) * .8, .15, .9);
+        const m = (k == 'ft' || k == 'rt') ? a : 1 - a;
+        return d[2] + (d[3] - d[2]) * m;
+    }
+    return clamp(d[5] + (hashString(TRACKS[i][TRACK.NAME] + k) - .5) * .3 * (d[3] - d[2]), d[2], d[3]);
+};
+
+// Lap time lost to a poor setup (0 = ideal for this track).
+function setupPenalty(c, i) {
+    let s = 0;
+    for (const d of SETUP_PARAMS)
+        if (!TYRE_SETUP_KEYS.includes(d[0]))
+            s += Math.abs(c.su[d[0]] - idealSetupValue(d, i)) / (d[3] - d[2]);
+    return (s * .7 + (1 - setupAggression(c)) * .7) * TRACKS[i][TRACK.LAP_TIME] / 90;
+}
+
+function baseLapTime(c, i) {
+    const w = powerWeight(i);
+    const e = effectiveStats(c);
+    const sc = e[0] * w + e[1] * (.8 - w) + e[2] * .2;
+    return TRACKS[i][TRACK.LAP_TIME] * SERIES[c.s].k * (1 + (100 - sc) * SERIES[c.s].d) * (1 + weatherLoss(i)) + setupPenalty(c, i);
+}
+
+const tyreTimeLoss = (k, m, tr, w = 1) => {
+    const p = TYRES[m];
+    const tw = tr[TRACK.TYRE_WEAR] * w * weatherTyreWear(m);
+    const L = p.l / tw;
+    return (p.o + weatherTyreOffset(m) + p.d * tw * k + (k > L ? (k - L) * .12 : 0)) * tr[TRACK.LAP_TIME] / 90;
+};
+
+// Fuel mix and ERS mode as in the game: pace delta (s per 90 s lap) and fuel burn.
+const FUEL_MIX_BURN = {
+    L: .93, S: 1, R: 1.06, X: 1.14
+};
+const FUEL_MIX_PACE = {
+    L: .3, S: 0, R: -.18, X: -.3
+};
+const ERS_MODE_PACE = {
+    N: .8, M: 0, O: -.2, H: -.35
+};
+
+const fuelMix = c => c.str.fm || 'S';
+const ersMode = c => c.s == 'f1' ? (c.str.er || 'M') : 'M';
+const fuelBurnPerLap = c => TRACKS[state.tr][TRACK.LENGTH_KM] * (c.s == 'f1' ? .34 : .27) * FUEL_MIX_BURN[fuelMix(c)];
+const startFuel = (c, N) => c.str.fl != null ? c.str.fl : Math.min(SERIES[c.s].x, N * fuelBurnPerLap(c) + 1.5);
+const modePaceDelta = (c, tr) => (FUEL_MIX_PACE[fuelMix(c)] + (c.s == 'f1' ? ERS_MODE_PACE[ersMode(c)] : 0)) * tr[TRACK.LAP_TIME] / 90;
+
+function simulateRace(b, tr, N, cs, p, c) {
+    const F = startFuel(c, N);
+    const br = fuelBurnPerLap(c);
+    const w = tyreWearFactor(c);
+    const d = modePaceDelta(c, tr);
+    let t = 0;
+    let si = 0;
+    let k = 0;
+    const l = [];
+    for (let i = 0; i < N; i++) {
+        let x = b + d + tyreTimeLoss(k++, cs[si], tr, w) + Math.max(0, F - br * i) * .03 + (i ? 0 : 3 + c.grid * .15 * (6 - tr[TRACK.OVERTAKING]) / 3);
+        if (si < p.length && i + 1 == p[si]) {
+            x += tr[TRACK.PIT_LOSS];
+            si++;
+            k = 0;
+        }
+        l.push(x);
+        t += x;
+    }
+    return { l, t, fr: F - br * N };
+}
+
+const pitLaps = (c, N) => c.str.f.map(f => clamp(Math.round(f * N), 3, N - 3));
+
+/**
+ * Track geometry and speed profile.
+ * 
+ * trackPath(i)     smooth closed outline of track i (from TRACK_GEOMETRY)
+ * trackProfile(i)  per-point corner speed limit, acceleration/braking pass, DRS zones, braking points,
+ *                  ERS deployment zones and the optimal racing-line offset
+ */
+
+const pathCache = {};
+
+function trackPath(i) {
+    if (pathCache[i])
+        return pathCache[i];
+    const [lat, pts] = TRACK_GEOMETRY[i].split('|');
+    const k = Math.cos(+lat * Math.PI / 180);
+    const P = pts.split(' ').map(s => {
+        const [x, y] = s.split(',').map(Number);
+        return [x * k, -y];
+    });
+    const n = P.length;
+    const o = [];
+    for (let k = 0; k < n; k++) {
+        const a = P[(k + n - 1) % n];
+        const b = P[k];
+        const c = P[(k + 1) % n];
+        const d = P[(k + 2) % n];
+        for (let t = 0; t < 20; t++) {
+            const u = t / 20;
+            const u2 = u * u;
+            const u3 = u2 * u;
+            o.push([0, 1].map(z => .5 * (2 * b[z] + (-a[z] + c[z]) * u + (2 * a[z] - 5 * b[z] + 4 * c[z] - d[z]) * u2 + (-a[z] + 3 * b[z] - 3 * c[z] + d[z]) * u3)));
+        }
+    }
+    return pathCache[i] = o;
+}
+
+// профиль скорости: кривизна -> предел скорости, разгон/торможение, зоны DRS и точки торможения
+const profileCache = {};
+
+// Speed limits from curvature, forward/backward passes, DRS zones, braking points, ERS zones, racing line.
+function trackProfile(i) {
+    const key = i + state.weather;                 // the profile depends on the grip of the weather
+    if (profileCache[key])
+        return profileCache[key];
+    const grip = weatherGrip();
+    const P = trackPath(i);
+    const n = P.length;
+    const tr = TRACKS[i];
+    const Lm = tr[TRACK.LENGTH_KM] * 1000;
+    const sg = [];
+    let tot = 0;
+    for (let k = 0; k < n; k++) {
+        const a = P[k];
+        const b = P[(k + 1) % n];
+        const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1e-9;
+        sg.push(d);
+        tot += d;
+    }
+    const ds = sg.map(d => d / tot * Lm);
+    const D = [0];
+    ds.forEach((d, k) => D.push(D[k] + d));
+    // top speed from the full-throttle share
+    const vt = 240 + (tr[TRACK.FULL_THROTTLE] - 40) * 2.25;
+    const u = [];
+    for (let k = 0; k < n; k++) {
+        const a = P[(k + n - 1) % n];
+        const b = P[k];
+        const c = P[(k + 1) % n];
+        const g = Math.atan2(c[1] - b[1], c[0] - b[0]) - Math.atan2(b[1] - a[1], b[0] - a[0]);
+        const an = Math.abs(Math.atan2(Math.sin(g), Math.cos(g)));
+        const cu = an / ((ds[(k + n - 1) % n] + ds[k]) / 2);
+        u.push(Math.max(17, Math.min(vt / 3.6, Math.sqrt(30 * grip / Math.max(cu, 1e-5)))));
+    }
+    for (let r = 0; r < 3; r++) {
+        for (let k = 0; k < n; k++) {
+            const j = (k + 1) % n;
+            u[j] = Math.min(u[j], Math.sqrt(u[k] * u[k] + 16 * grip * ds[k]));
+        }
+        for (let k = n - 1; k >= 0; k--) {
+            const j = (k + 1) % n;
+            u[k] = Math.min(u[k], Math.sqrt(u[j] * u[j] + 90 * grip * ds[k]));
+        }
+    }
+    let T0 = 0;
+    const cm = [0];
+    for (let k = 0; k < n; k++) {
+        T0 += ds[k] / u[k];
+        cm.push(T0);
+    }
+    const dr = Array(n).fill(0);
+    const bp = Array(n).fill(0);
+    const runs = [];
+    let s0 = -1;
+    for (let k = 0; k <= n; k++) {
+        const hi = k < n && u[k] > .93 * vt / 3.6;
+        if (hi && s0 < 0)
+            s0 = k;
+        if (!hi && s0 >= 0) {
+            runs.push([s0, k, D[k] - D[s0]]);
+            s0 = -1;
+        }
+    }
+    runs.sort((a, b) => b[2] - a[2]).slice(0, tr[TRACK.DRS_ZONES]).forEach(r => {
+        for (let k = r[0]; k < r[1]; k++)
+            dr[k] = 1;
+    });
+    for (let k = 0; k < n; k++) {
+        const p = (k + n - 1) % n;
+        const j = (k + 1) % n;
+        if (u[j] < u[k] - .05 && u[p] <= u[k] + .05) {
+            let m = j;
+            let c = 0;
+            while (u[(m + 1) % n] < u[m] - .02 && c++ < n)
+                m = (m + 1) % n;
+            const d = (u[k] - u[m]) * 3.6;
+            if (d > 30)
+                bp[k] = Math.min(1.3, d / 110);
+        }
+    }
+    // ERS deployment zones: longest straights up to ~11 s of deployment per lap
+    const ep = Array(n).fill(0);
+    const rn = [];
+    let q0 = -1;
+    for (let k = 0; k <= n; k++) {
+        const hi = k < n && u[k] > .82 * vt / 3.6;
+        if (hi && q0 < 0)
+            q0 = k;
+        if (!hi && q0 >= 0) {
+            let t = 0;
+            for (let j = q0; j < k; j++)
+                t += ds[j] / u[j];
+            rn.push([q0, k, t]);
+            q0 = -1;
+        }
+    }
+    rn.sort((a, b) => b[2] - a[2]);
+    let bud = 11;
+    for (const r of rn) {
+        if (bud <= 0)
+            break;
+        for (let k = r[0]; k < r[1]; k++)
+            ep[k] = 1;
+        bud -= r[2];
+    }
+    // optimal racing line: offset towards the inside of corners
+    const og = [];
+    for (let k = 0; k < n; k++) {
+        const a = P[(k + n - 1) % n];
+        const b = P[k];
+        const c = P[(k + 1) % n];
+        const g = Math.atan2(c[1] - b[1], c[0] - b[0]) - Math.atan2(b[1] - a[1], b[0] - a[0]);
+        og.push(Math.atan2(Math.sin(g), Math.cos(g)));
+    }
+    let off = og.map(g => Math.max(-1, Math.min(1, g * 14)));
+    for (let r = 0; r < 3; r++)
+        off = off.map((_, k) => {
+            let t = 0;
+            for (let j = -12; j <= 12; j++)
+                t += off[(k + j + n) % n];
+            return t / 25;
+        });
+    const mo = Math.max(...off.map(Math.abs)) || 1;
+    off = off.map(v => v / mo);
+    let turnR = 0, turnL = 0;
+    og.forEach(g => g > 0 ? turnR += g : turnL -= g);
+    const pf = {
+        n, Lm, D, ds, u, cm, T0, dr, bp, vt, off, ep
+    };
+    pf.rs = turnR / ((turnR + turnL) || 1);   // share of right-hand turning: left tyres are loaded more in right-hand corners
+    const tA = x => {
+        const k = indexAtDistance(pf, x);
+        return cm[k] + (x - D[k]) / ds[k] * (cm[k + 1] - cm[k]);
+    };
+    const s1 = tA(Lm / 3);
+    const s2 = tA(2 * Lm / 3) - s1;
+    pf.sh = [s1 / T0, s2 / T0, (T0 - s1 - s2) / T0];
+    return profileCache[key] = pf;
+}
+
+const indexAtDistance = (p, x) => {
+    x = (x % p.Lm + p.Lm) % p.Lm;
+    let a = 0;
+    let b = p.n - 1;
+    while (a < b) {
+        const m = (a + b + 1) >> 1;
+        if (p.D[m] <= x)
+            a = m;
+        else
+            b = m - 1;
+    }
+    return a;
+};
+
+/**
+ * Race simulation used by the "Test" tab.
+ * 
+ * Every car follows the track speed profile scaled by its own pace; it follows the car ahead,
+ * attacks at braking points, uses DRS/ERS, pits according to its strategy and records sector/lap times.
+ * 
+ * Fields of a simulated car (state.sim.cs[i])
+ *   c    the garage car              s    distance along the race in metres (negative = on the grid)
+ *   v    speed km/h                  m    pace multiplier of the speed profile
+ *   lt0  lap time at the start       lp   current lap (1 after crossing the line)
+ *   sec  current sector (-1..2)      sc / ls  sector times of this / previous lap
+ *   last / best  last and best lap   hl / hp / hc  per-lap time, position, tyre
+ *   th / br  throttle / brake %      gr   gear
+ *   er   ERS charge %                dp   deploying now        md  ERS mode label
+ *   dr   DRS open                    att  running overtake manoeuvre   lo  lateral offset (m)
+ *   comp tyre compound               age  tyre age (laps)      wr  tyre wear %      wf  setup wear factor
+ *   sp   planned pit laps            si   current stint index
+ *   pit  0 none, 1 entering the pit lane, 2 stationary, 3 leaving
+ *   req  pit requested               pin / pl / stS / stC / stT  pit timing values
+ *   ot / lost  overtakes made / positions lost
+ *   fin  finish time (0 = still racing)
+ */
+
+const testLapTime = c => baseLapTime(c, state.tr) + modePaceDelta(c, TRACKS[state.tr]) + tyreTimeLoss(1, c.str.c[0], TRACKS[state.tr], tyreWearFactor(c)) + startFuel(c, raceLaps()) * .03;
+
+const carsByPace = () => state.cars.map(c => ({ c, t: testLapTime(c) })).sort((a, b) => a.t - b.t);
+
+// ---- Realistic driving ("human mode") ----
+// Every driver gets random traits from the same distribution, so nobody is better or worse by design:
+//   pen   steward penalty, s (added to the finishing time)    cons  consistency (higher = smaller pace scatter and fewer mistakes)    ag    aggression (attacks, risk)
+//   tmg   tyre management (wear multiplier)    hold   launch reaction time, s    sd    lap pace scatter, s
+// Timing loops: the lap is split into LOOPS points; every car records when it passed each point.
+// Gaps are read from these times (like real timing), not estimated from distance.
+const LOOPS = 60;
+
+const NEUTRAL_TRAITS = { pen: 0, exp: .7, rac: .7, awa: .7, pz: 0, dg: 0, pnc: false, unpl: false, out: false, outT: 0, why: '', cons: 1, ag: 1, tmg: 1, hold: 0, sd: 0, nz: 0, wt: 0, wob: 0, err: null, errN: 0, errT: 0, slow: false };
+
+// p = pilot ratings {exp, rac, awa, pac}, 1-99 (70 = baseline, see model/pilot.js):
+//   EXP  experience: stays calm under pressure, gentle on the tyres, good starts
+//   RAC  racecraft: attacks succeed more often, defending is harder to beat, good starts
+//   AWA  awareness: steady laps, fewer mistakes, contacts and steward penalties
+//   PAC  pace: raw speed per lap (about 0.2 s faster at 99, 0.55 s slower at 1)
+function driverTraits(p) {
+    const u = (a, b) => a + (b - a) * Math.random();
+    const e = p.exp / 99, r = p.rac / 99, a = p.awa / 99;
+    const cons = (.6 + .45 * a + .25 * e) * u(.95, 1.05);
+    return {
+        ...NEUTRAL_TRAITS, exp: e, rac: r, awa: a, cons,
+        ag: u(.8, 1.2),
+        tmg: (1.07 - .13 * e) * u(.98, 1.02),
+        hold: Math.max(.12, .48 - .26 * (.5 * e + .5 * r) + u(-.06, .06)),
+        sd: Math.max(.06, .12 + (1.3 - cons) * .56),
+        pz: (70 - p.pac) * .008 * TRACKS[state.tr][TRACK.LAP_TIME] / 90,
+    };
+}
+
+// Rolled once per braking zone. Mistakes are more likely with a car close ahead (pressure) and on worn tyres.
+function driverMistakeCheck(c, ah, w, z) {
+    const near = ah && ah.s - c.s < 40;
+    const p = .0025 * w * (1 + (near ? 1.2 * (1.6 - 1.2 * c.exp) : 0) + (c.wr > 85 ? 1 : 0)) * c.ag / c.cons * weatherRisk(state.tr);
+    if (Math.random() >= p) return;
+    const r = Math.random();
+    const wx = state.weather == 'dry' ? 1 : state.weather == 'damp' ? 1.5 : 2;   // wet weather: more big mistakes
+    const big = r < .04 * wx, wide = !big && r < .22 + .08 * (wx - 1);      // 4% off the track, 18% runs wide, the rest is a small lock-up
+    c.err = big ? { t0: z.t, dur: 2.8, k: .5, lat: 8 } : wide ? { t0: z.t, dur: 1.8, k: .8, lat: 5 } : { t0: z.t, dur: 1, k: .93, lat: 0 };
+    if (Math.random() < .5) c.err.lat = -c.err.lat;
+    c.errN++;
+    c.errT += c.err.dur * (1 - c.err.k);
+    if (state.dnf && Math.random() < (big ? .3 : wide ? .04 : 0)) {   // a big mistake can end in the barrier
+        retireCar(c, z, 'авария, сход с гонки', '💥');
+        return;
+    }
+    if (big && state.dnf && Math.random() < .3 * (1.5 - c.awa)) penalize(c, z, 5, 'выезд за пределы трассы');
+    if (big) z.log.unshift(`${Math.max(1, c.lp)} кр.: ⚠️ ${carLabel(c.c)} выехал за пределы трассы`);
+    else if (wide) z.log.unshift(`${Math.max(1, c.lp)} кр.: ⚠️ ${carLabel(c.c)} — ошибка на торможении`);
+}
+
+// ---- Crashes, damage and technical failures (switch "Crashes and DNF", state.dnf) ----
+const FAIL_PARTS = ['двигатель', 'коробка передач', 'гидравлика', 'перегрев тормозов'];
+
+// Retired cars are sorted last; running cars by distance.
+const raceOrder = cs => [...cs].sort((a, b) => (a.out - b.out) || (b.s - a.s));
+
+// Technical failure rate per second, from the reliability value of the car (roughly 1-5% per race).
+const mechanicalRate = c => (100 - effectiveStats(c.c)[3]) / 100 * .0033 / c.lt0;
+
+function mechanicalReason(c) {
+    const part = c.c.s == 'f1' && Math.random() < .2 ? 'система ERS' : FAIL_PARTS[Math.floor(Math.random() * FAIL_PARTS.length)];
+    return `технический отказ (${part}), сход`;
+}
+
+function retireCar(c, z, why, icon) {
+    c.out = true;
+    c.outT = z.t;
+    c.why = why;
+    c.att = null;
+    c.req = false;
+    c.err = null;
+    c.side = Math.random() < .5 ? 1 : -1;               // side of the track the car rolls to
+    z.dnf.push(c);
+    playEvent(icon === '💥' ? 'crash' : 'fail', c.c);
+    z.log.unshift(`${Math.max(1, c.lp)} кр.: ${icon} ${carLabel(c.c)} — ${why}`);
+}
+
+// Steward time penalty: added to the finishing time in the classification.
+function penalize(c, z, seconds, why) {
+    c.pen += seconds;
+    z.log.unshift(`${Math.max(1, c.lp)} кр.: ⚖️ ${carLabel(c.c)} — штраф +${seconds} с (${why})`);
+}
+
+// Damage costs seconds per lap until the car pits (repairs add time to the stop).
+function damageCar(c, z, seconds, text) {
+    c.dg = Math.max(c.dg, seconds);
+    c.req = true;
+    c.unpl = true;                                       // unplanned stop: the strategy stays as it was
+    z.log.unshift(`${Math.max(1, c.lp)} кр.: ⚠️ ${carLabel(c.c)} — ${text}`);
+}
+
+// Rolled when car a starts an attack on car d.
+function contactCheck(a, d, z) {
+    const p = (state.human ? .004 * a.ag * (1.85 - 1.2 * a.awa) : .001) * (a.lp <= 1 ? 2 : 1) * weatherRisk(state.tr);
+    if (Math.random() >= p) return;
+    z.log.unshift(`${Math.max(1, a.lp)} кр.: ⚠️ контакт: ${carLabel(a.c)} × ${carLabel(d.c)}`);
+    const r = Math.random();
+    if (r < .5) damageCar(a, z, .5 + Math.random() * .7, 'повреждение переднего крыла');
+    else if (r < .7) damageCar(d, z, .5 + Math.random() * .7, 'повреждение переднего крыла');
+    else if (r < .85) {
+        damageCar(a, z, 6, 'прокол');
+        a.pnc = true;
+    }
+    else {
+        retireCar(a, z, 'контакт, сход с гонки', '💥');
+        if (Math.random() < .4) retireCar(d, z, 'контакт, сход с гонки', '💥');
+    }
+    if (state.human && Math.random() < clamp(.85 - .6 * a.awa, .15, .8)) penalize(a, z, 5, 'контакт');   // the attacker is usually blamed
+}
+
+function initSimulation() {
+    const pf = trackProfile(state.tr);
+    state.sim = {
+        t: 0, log: [], res: [], cs: carsByPace().map(q => ({
+            c: q.c, lt: q.t, lt0: q.t, m: pf.T0 / q.t, s: -(q.c.grid * 30 + 10), v: 0, pv: 0, k: 0, lp: 0, ts: 0, sec: -1, st: 0, sc: [0, 0, 0], ls: [0, 0, 0], last: 0, best: 0, er: 70, th: 0, br: 0, gr: 1, dr: 0, dp: 0, comp: q.c.str.c[0], wf: tyreWearFactor(q.c), sp: pitLaps(q.c, raceLaps()), si: 0, lo: 0, ot: 0, lost: 0, tt: 0, tf: 0, tb: 0, td: 0, eu: 0, eh: 0, vx: 0, hl: [], hp: [], hc: [], ps: [], fin: 0, wi: 0, att: null, rk: '', md: '', age: 1, wr: 0, s0: 0, pit: 0, req: false, pin: 0, pl: 0, stT: 0, stS: 0, stC: 0, bs: 0, ei: 0, ex: 0, lw: .4 + hashString('w' + q.c.id) * .3
+        }))
+    };
+    state.kx = state.ky = state.ks = null;   // the camera jumps to the new race
+    // driver traits (neutral values while the realistic mode is off)
+    state.sim.dnf = [];
+    state.sim.cs.forEach(c => {
+        Object.assign(c, state.human ? driverTraits(c.c.pil) : NEUTRAL_TRAITS);
+        c.wf *= c.tmg;
+        c.tl = new Float32Array((raceLaps() + 3) * LOOPS);   // time of passing each timing loop
+        c.pi = -1;                                           // index of the last loop passed
+    });
+}
+
+// How much later car c passed the timing loop that `other` (ahead) passed first; null if there is no data yet.
+function gapSeconds(c, other) {
+    const p = Math.min(c.pi, other.pi);
+    if (p < 0 || p >= c.tl.length) return null;
+    return Math.max(0, c.tl[p] - other.tl[p]);
+}
+
+// Record the time at which the car passes each timing loop (called right after the car has moved).
+function recordLoops(c, z, L) {
+    const Lk = L / LOOPS, pi = Math.floor(c.s / Lk);
+    while (c.pi < pi) {
+        c.pi++;
+        if (c.pi >= 0 && c.pi < c.tl.length) c.tl[c.pi] = z.t - Math.max(0, c.s - c.pi * Lk) / Math.max(c.v / 3.6, 1);
+    }
+}
+
+// Advance the simulation by dt seconds (called many times per animation frame).
+function stepSimulation(dt) {
+    const z = state.sim;
+    const pf = trackProfile(state.tr);
+    const L = pf.Lm;
+    const tr = TRACKS[state.tr];
+    const e = tr[TRACK.OVERTAKING];
+    const EI = L - 350;
+    const ord = raceOrder(z.cs);
+    z.t += dt;
+    if (!z.fin && ord[0].lp > raceLaps()) {
+        z.fin = true;
+        z.log.unshift('🏁 Финиш: победитель ' + carLabel(ord[0].c));
+    }
+    if (!z.done && z.cs.every(c => c.fin || c.out))
+        z.done = true;
+    // ---- per-car update ----
+    ord.forEach((c, r) => {
+        if (c.out) {                                      // retired: roll to a stop beside the track
+            c.v = Math.max(0, c.v - 70 * dt);
+            c.s += c.v / 3.6 * dt;
+            recordLoops(c, z, L);
+            c.lo += Math.max(-4 * dt, Math.min(4 * dt, c.side * 9 - c.lo));
+            c.th = 0;
+            c.br = c.v > 0 ? 60 : 0;
+            c.dr = 0;
+            c.dp = 0;
+            return;
+        }
+        if (state.dnf && c.s > 0 && Math.random() < mechanicalRate(c) * dt) {
+            retireCar(c, z, mechanicalReason(c), '🔧');
+            return;
+        }
+        let ah = null;
+        if (!c.pit)
+            for (let j = r - 1; j >= 0; j--)
+                if (!ord[j].pit) {
+                    ah = ord[j];
+                    break;
+                }
+        // tyres: age, wear and the resulting pace multiplier
+        const k = indexAtDistance(pf, c.s);
+        const f1 = c.c.s == 'f1';
+        const ph = (c.s % L + L) % L;
+        const lap = Math.floor(c.s / L);
+        const life = TYRES[c.comp].l / (tr[TRACK.TYRE_WEAR] * c.wf * weatherTyreWear(c.comp));
+        c.age = 1 + Math.max(0, (c.s - c.s0) / L);
+        c.wr = Math.min(100, Math.round(c.age / life * 100));
+        c.m = pf.T0 / (c.lt0 + tyreTimeLoss(c.age, c.comp, tr, c.wf) - tyreTimeLoss(1, c.c.str.c[0], tr, c.wf) - Math.max(0, c.s) / L * fuelBurnPerLap(c.c) * .03 + c.nz + c.pz + c.dg);
+        if (!c.pit && !c.req && c.s > 0 && c.lp > 0 && ((c.sp.length > c.si && c.lp >= c.sp[c.si]) || c.wr >= 100))
+            c.req = true;
+        // pit entry (strategy lap reached, pit-entry line passed)
+        if (c.req && !c.pit && c.s > 0 && ph >= EI && ph < L - 40) {
+            c.pit = 1;
+            c.wi = c.wr;
+            c.pin = z.t;
+            c.ei = lap * L + EI;
+            c.bs = (lap + 1) * L + 30 + (c.c.t % 10) * 20 + (c.c.id % 2) * 8;
+            c.ex = (lap + 1) * L + 430;
+            c.stS = f1 ? 2 + Math.random() * 1.2 : 5.5 + Math.random() * 2;
+            if (c.dg) c.stS += 2 + Math.random() * 1.5;   // repairs
+            c.slow = false;
+            if (state.human) {
+                c.stS *= 1 + gauss() * .08;                   // crew and driver variation
+                if (Math.random() < .05) {                    // rare problem: stuck wheel nut, late release ...
+                    c.stS += 1.5 + Math.random() * 2.5;
+                    c.slow = true;
+                }
+            }
+        }
+        // target speed (km/h) from the track profile, then pit-lane state machine
+        let tv = pf.u[c.s < 0 ? 0 : k] * 3.6 * c.m;
+        c.dr = 0;
+        if (c.pit === 1) {
+            const rem = c.bs - c.s;
+            tv = Math.min(80, 3.6 * Math.sqrt(14 * Math.max(0, rem)));
+            if (rem < .5) {
+                c.pit = 2;
+                playEvent('pit', c.c);
+                c.stC = 0;
+            }
+        }
+        else if (c.pit === 2) {
+            tv = 0;
+            c.stC += dt;
+            if (c.stC >= c.stS) {
+                c.stT = c.stS;
+                if (c.slow) z.log.unshift(`🛠 ${carLabel(c.c)}: медленный пит-стоп (${c.stS.toFixed(1)} с)`);
+                if (!c.unpl) {                            // planned stop: next stint of the strategy
+                    c.si++;
+                    c.comp = c.c.str.c[Math.min(c.si, c.c.str.c.length - 1)];
+                }
+                c.dg = 0;                                 // repaired, fresh tyres
+                c.pnc = false;
+                c.unpl = false;
+                c.s0 = c.s;
+                c.pit = 3;
+            }
+        }
+        else if (c.pit === 3) {
+            tv = 80;
+            if (c.s >= c.ex) {
+                c.pit = 0;
+                c.req = false;
+                c.pl = z.t - c.pin;
+                c.ps.push({
+                    lap: c.lp, pl: c.pl, st: c.stT, comp: c.comp, w: c.wi
+                });
+            }
+        }
+        // a mistake slows the car for a moment; at the start a human needs time to react
+        if (c.err) {
+            if (z.t - c.err.t0 > c.err.dur) c.err = null;
+            else tv *= c.err.k;
+        }
+        if (state.human && z.t < c.hold) tv = 0;
+        // following the car ahead, DRS and slipstream
+        if (ah) {
+            const g = ah.s - c.s;
+            const gt = g / Math.max(c.v / 3.6, 20);                 // time gap to the car ahead, s
+            const fast = pf.u[k] > .8 * pf.vt / 3.6;                // on a straight / in a fast section
+            const spray = state.weather == 'dry' ? 1 : state.weather == 'damp' ? 1.3 : 1.8;   // water spray makes following harder
+            if (!fast && gt < 1.2 * spray) tv *= 1 - .012 * spray * (1 - gt / (1.2 * spray));   // dirty air: less downforce in corners when close behind
+            if (pf.dr[k] && c.s > L && state.weather !== 'rain' && g / Math.max(c.v / 3.6, 20) < 1) {   // DRS is not allowed in the rain
+                c.dr = 1;
+                tv *= 1.025;
+            }
+            if (g < 25 && fast)
+                tv *= 1.006;                                        // slipstream
+            if (g < 16 && !(c.att && c.att.t === ah))
+                tv = Math.min(tv, ah.v + 2);
+        }
+        if (c.dp)
+            tv *= 1.012;
+        // overtake: decide at the next braking point, then run a visible side-by-side manoeuvre
+        const prevK = c.k;
+        c.k = k;
+        // a car can skip profile points between two steps, so check every point it has just passed
+        if (state.human && k !== prevK && c.s > 0 && !c.pit) {
+            for (let i = (prevK + 1) % pf.n, guard = 0; guard < 8; i = (i + 1) % pf.n, guard++) {
+                if (pf.bp[i]) driverMistakeCheck(c, ah, pf.bp[i], z);
+                if (i === k) break;
+            }
+        }
+        if (ah && !c.att && c.s > 0 && !c.pit) {
+            const g = ah.s - c.s;
+            if (g < 45 && c.v > ah.v - 6) {
+                let d = 0;
+                let bb = -1;
+                for (let i = 0; i < 40 && d < 170; i++) {
+                    const jj = (k + i) % pf.n;
+                    if (pf.bp[jj]) {
+                        bb = jj;
+                        break;
+                    }
+                    d += pf.ds[jj];
+                }
+                if (bb >= 0 && c.rk !== bb + '|' + Math.floor(c.s / L)) {
+                    c.rk = bb + '|' + Math.floor(c.s / L);
+                    const pa = c.m / ah.m - 1;
+                    const p = Math.max(0, Math.min(.9, e * e / 25 * pf.bp[bb] * (.05 + pa * 25 + (c.dr ? .3 : 0) + (f1 && c.er > 25 ? .1 : 0))));
+                    if (Math.random() < (state.human ? p * (.8 + .4 * c.ag / 1.2) * (.7 + .6 * c.rac) * (1.2 - .4 * ah.rac) : p)) {
+                        c.att = { t: ah, sg: pf.off[(bb + 30) % pf.n] >= 0 ? 1 : -1, t0: z.t };
+                        z.log.unshift(`${Math.max(1, c.lp)} кр.: ${carLabel(c.c)} атакует ${carLabel(ah.c)}`);
+                        if (state.dnf) contactCheck(c, ah, z);
+                    }
+                }
+            }
+        }
+        let tl = 0;
+        if (c.att) {
+            const a2 = c.att.t;
+            if (c.s > a2.s + 7) {
+                z.log.unshift(`${Math.max(1, c.lp)} кр.: ✅ ${carLabel(c.c)} обошёл ${carLabel(a2.c)}`);
+                c.ot++;
+                a2.lost++;
+                playEvent('overtake', c.c);
+                playEvent('lost', a2.c);
+                c.att = null;
+            }
+            else if (c.pit || a2.pit || z.t - c.att.t0 > 14 || a2.s - c.s > 80 || a2.out)   // gave up: too long or the gap grew
+                c.att = null;
+            else {
+                tl = c.att.sg * 5.5;
+                tv = Math.min(Math.max(tv * 1.03, a2.v + 12), tv * 1.1);   // never faster than the car can physically go here
+            }
+        }
+        z.log.length = Math.min(z.log.length, 6);
+        if (state.human) {
+            if (z.t > c.wt) {                     // small wander around the racing line, a new value every ~second
+                c.wt = z.t + .6 + Math.random() * .8;
+                c.wob = (Math.random() - .5) * 1.4 / c.cons;
+            }
+            tl += c.wob + (c.err ? c.err.lat : 0);
+        }
+        c.lo += Math.max(-5 * dt, Math.min(5 * dt, tl - c.lo));
+        // speed integration with acceleration / braking limits
+        c.pv = c.v;
+        c.v = tv > c.v ? Math.min(tv, c.v + 29 * dt) : Math.max(tv, c.v - 160 * dt);
+        if (c.pit === 2)
+            c.v = 0;
+        c.s += c.v / 3.6 * dt;
+        recordLoops(c, z, L);
+        // telemetry: throttle, brake, gear
+        const a = (c.v - c.pv) / dt;
+        const br = a < -6 ? Math.min(100, -a / 1.6) : 0;
+        let th;
+        if (br)
+            th = 0;
+        else if (c.pit)
+            th = c.pit === 2 ? 0 : 55;
+        else if (tv > c.v + 1)
+            th = 100;
+        else
+            th = c.v >= pf.vt * .96 ? 100 : 35 + c.v / pf.vt * 45;
+        c.br = c.br * .6 + br * .4;
+        c.th = c.th * .6 + th * .4;
+        c.tt += dt;
+        if (c.th > 90)
+            c.tf += dt;
+        if (c.br > 10)
+            c.tb += dt;
+        if (c.dr)
+            c.td += dt;
+        if (c.v > c.vx)
+            c.vx = c.v;
+        c.gr = (f1 ? [0, 70, 105, 145, 185, 225, 265, 300] : [0, 60, 100, 150, 200, 250]).filter(x => c.v >= x).length || 1;
+        // ERS: deploy on planned straights or when attacking, harvest under braking
+        if (f1) {
+            const atk = ah && (ah.s - c.s) / Math.max(c.v / 3.6, 20) < 1.3 && c.er > 15;
+            const want = c.th > 90 && c.v > 110 && !c.pit && c.c.str.er !== 'N' && (c.c.str.er === 'H' || pf.ep[k] || atk || c.er > 85 || (c.c.str.er === 'O' && c.er > 55));
+            c.md = want ? (atk ? 'атака' : 'по плану') : (br > 10 ? 'рекуперация' : 'заряд');
+            c.dp = want && c.er > 0 ? 1 : 0;
+            if (c.dp) {
+                c.er = Math.max(0, c.er - dt * 100 / 22);
+                c.eu += dt * 100 / 22;
+            }
+            if (br > 10) {
+                c.er = Math.min(100, c.er + dt * 100 / 26);
+                c.eh += dt * 100 / 26;
+            }
+            else if (c.th < 60 && !c.dp)
+                c.er = Math.min(100, c.er + dt * 100 / 160);
+        }
+        // sector and lap timing
+        const sn = c.s < 0 ? -1 : Math.floor((c.s % L) / (L / 3));
+        if (sn !== c.sec) {
+            if (state.human && sn >= 0) c.nz = .55 * c.nz + gauss() * c.sd * .8;   // pace varies from sector to sector
+            if (c.sec >= 0)
+                c.sc[c.sec] = z.t - c.st;
+            if (c.sec === 2 && sn === 0) {
+                c.last = z.t - c.ts;
+                c.ts = z.t;
+                c.ls = [...c.sc];
+                if (!c.best || c.last < c.best)
+                    c.best = c.last;
+                c.lp++;
+                c.hl.push(c.last);
+                c.hp.push(ord.indexOf(c) + 1);
+                c.hc.push(c.comp);
+                if ((c.lp > raceLaps() || z.fin) && !c.fin) {
+                    c.fin = z.t;
+                    z.res.push(c);
+                playEvent('finish', c.c);
+                }
+            }
+            if (c.sec === -1) {
+                c.ts = z.t;
+                c.lp = 1;
+            }
+            c.st = z.t;
+            c.sec = sn;
+        }
+    });
+}
+
+/**
+ * Compact pilot card: overall rating (RTG) on the left, four editable ratings on the right.
+ * scope 'car' edits the selected car, scope 'new' is the card in the "add a car" window.
+ */
+const PILOT_NOTE = 'EXP — опыт · RAC — гоночное мастерство · AWA — осознанность · PAC — скорость · RTG — общий рейтинг (считается сам). Значения 1–99, действуют при включённой реалистичной езде.';
+
+function pilotCardHtml(p, scope) {
+    const rows = PILOT_STATS.map(([key, code, name]) => `<label title="${name}"><span>${code}</span><input type="range" min="1" max="99" step="1" value="${p[key]}" data-k="${key}" oninput="onPilotInput(this)"><b>${p[key]}</b></label>`).join('');
+    return `<div class="pilot" data-scope="${scope}"><div class="rtg"><b>${pilotRating(p)}</b><small>RTG</small></div><div class="pst">${rows}</div></div>`;
+}
+
+const readPilotCard = card => Object.fromEntries([...card.querySelectorAll('input[data-k]')].map(i => [i.dataset.k, +i.value]));
+
+function onPilotInput(e) {
+    const card = e.closest('.pilot');
+    e.nextElementSibling.textContent = e.value;
+    const p = readPilotCard(card);
+    card.querySelector('.rtg b').textContent = pilotRating(p);
+    if (card.dataset.scope === 'car') currentCar().pil = p;
+}
+
+/**
+ * Saved car setups. A preset stores the setup sheet and the race strategy (not the pilot) under a name and can be
+ * loaded onto any car - the selected one. Presets are kept in this browser (localStorage); if the browser blocks
+ * storage they live in memory until the page is closed.
+ */
+const PRESET_KEY = 'f1-engineer-setups';
+let presetFallback = [];
+let presetMessage = '';
+
+function loadPresets() {
+    try {
+        return JSON.parse(localStorage.getItem(PRESET_KEY)) || [];
+    } catch (e) {
+        return presetFallback;
+    }
+}
+
+function storePresets(list) {
+    presetFallback = list;
+    try {
+        localStorage.setItem(PRESET_KEY, JSON.stringify(list));
+    } catch (e) { /* memory only */ }
+}
+
+const cleanPresetName = v => v.replace(/[<>&"']/g, '').trim().slice(0, 22);
+
+function presetsHtml() {
+    const c = currentCar(), list = loadPresets(), msg = presetMessage;
+    presetMessage = '';
+    return `<div class="g">Сохранённые настройки</div>
+<div class="row"><input type="text" id="psn" maxlength="22" value="${cleanPresetName(c.name || SERIES[c.s].t[c.t][0])} · ${TRACKS[state.tr][TRACK.NAME]}"><button onclick="savePreset()">💾 Сохранить</button></div>
+<div class="row"><select id="psl">${list.length ? list.map(p => `<option value="${p.id}">${p.name}</option>`).join('') : '<option value="">нет сохранённых</option>'}</select><button onclick="applyPreset()">⬇ Загрузить</button><button onclick="deletePreset()">🗑</button></div>
+<div class="mu">${msg || 'Сохраняются сетап и стратегия гонки (без пилота), хранятся в этом браузере. Загрузка применяется к выбранному болиду.'}</div>`;
+}
+
+function savePreset() {
+    const c = currentCar(), name = cleanPresetName($('psn').value) || 'Настройки';
+    const list = loadPresets().filter(p => p.name !== name);
+    list.push({ id: Date.now(), name, su: { ...c.su }, str: JSON.parse(JSON.stringify(c.str)) });
+    storePresets(list);
+    presetMessage = 'Сохранено: ' + name;
+    renderCarTab();
+}
+
+function applyPreset() {
+    const p = loadPresets().find(x => x.id == $('psl').value);
+    if (!p) return;
+    const c = currentCar();
+    c.su = { ...c.su, ...p.su };
+    c.str = JSON.parse(JSON.stringify(p.str));
+    presetMessage = 'Загружено: ' + p.name;
+    renderCarTab();
+}
+
+function deletePreset() {
+    const id = $('psl').value;
+    const p = loadPresets().find(x => x.id == id);
+    if (!p) return;
+    storePresets(loadPresets().filter(x => x.id != id));
+    presetMessage = 'Удалено: ' + p.name;
+    renderCarTab();
+}
+
+/**
+ * Weather card of the strategy tab (the race tab has a button that cycles the weather).
+ */
+function weatherCardHtml() {
+    const buttons = Object.entries(WEATHER_MODES).map(([k, m]) => `<button${state.weather == k ? ' class="on"' : ''} onclick="setWeather('${k}')">${m.icon} ${m.name}</button>`).join('');
+    return `<div class="card"><h3>Погода</h3><div class="seg">${buttons}</div><div class="mu" style="margin-top:6px">${weatherNote(state.tr)}</div></div>`;
+}
+
+/**
+ * Draws the surroundings of the track on the race map: sea and lakes, trees and buildings, landmarks and grandstands.
+ * Trees and buildings are placed once per track (seeded random, so a track always looks the same) and only drawn
+ * when they are on screen.
+ */
+const envCache = {};
+
+function seeded(seed) {
+    let a = (seed + 1) * 2654435761 >>> 0;
+    return () => {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+const ENV_LOOK = {   // spacing, min and max distance from the track (m)
+    forest: [18, 45, 450], park: [55, 50, 420], city: [58, 42, 480], sand: [75, 40, 420],
+};
+const ENV_EXTRA_SIZE = { wheel: 50, tower: 20, stadium: 90, hotel: 55 };   // clearance radius in m
+
+// bb = track bounding box [minX, minY, maxX, maxY] in map units, ppm = map units per metre
+function buildEnvironment(i, P, bb, ppm) {
+    const env = ENVIRONMENT[i], rnd = seeded(i), [bx, by, ex, ey] = bb;
+    const out = { items: [], extras: [], sea: null, lake: null };
+    const edge = { S: ey, N: by, E: ex, W: bx };
+    const wave = (v, amp) => amp * ppm * Math.sin(v / (180 * ppm));
+    if (env.sea) {
+        const d = env.sea.dir, g = env.sea.gap * ppm, far = 6000 * ppm, pad = 800 * ppm, step = 60 * ppm;
+        const sgn = (d == 'S' || d == 'E') ? 1 : -1, base = edge[d] + sgn * g, pts = [];
+        const [a0, a1] = (d == 'S' || d == 'N') ? [bx - pad, ex + pad] : [by - pad, ey + pad];
+        for (let v = a0; v <= a1; v += step) pts.push([v, base + wave(v, 30)]);
+        pts.push([a1, base + sgn * far], [a0, base + sgn * far]);
+        out.sea = (d == 'S' || d == 'N') ? pts : pts.map(p => [p[1], p[0]]);
+    }
+    if (env.lake) {
+        const [fx, fy, frx, fry] = env.lake, cx = bx + fx * (ex - bx), cy = by + fy * (ey - by), rx = frx * (ex - bx), ry = fry * (ey - by);
+        out.lake = Array.from({ length: 48 }, (_, k) => [cx + rx * Math.cos(k / 48 * 6.283) * (1 + .06 * Math.sin(k * 3)), cy + ry * Math.sin(k / 48 * 6.283) * (1 + .06 * Math.sin(k * 3))]);
+        out.lakeEllipse = [cx, cy, rx, ry];
+    }
+    const inWater = (x, y) => {
+        if (env.sea) {
+            const d = env.sea.dir, g = env.sea.gap * ppm;
+            if ((d == 'S' && y > ey + g) || (d == 'N' && y < by - g) || (d == 'E' && x > ex + g) || (d == 'W' && x < bx - g)) return true;
+        }
+        if (out.lakeEllipse) {
+            const [cx, cy, rx, ry] = out.lakeEllipse;
+            if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 < 1.2) return true;
+        }
+        return false;
+    };
+    const S = P.filter((_, k) => k % 6 == 0);
+    const minD2 = (x, y) => {
+        let m = Infinity;
+        for (const p of S) {
+            const d = (p[0] - x) ** 2 + (p[1] - y) ** 2;
+            if (d < m) m = d;
+        }
+        return m;
+    };
+    const [sp0, dmin, dmax] = ENV_LOOK[env.around];
+    const margin = dmax * ppm;
+    const area = (ex - bx + 2 * margin) * (ey - by + 2 * margin) / (ppm * ppm);
+    const sp = Math.max(sp0, Math.sqrt(area / 5500)), stepU = sp * ppm;
+    const palette = env.around == 'city' ? (env.pal == 'glass' ? ['#3f4757', '#505a6e', '#2f3647', '#5b6881'] : ['#b9b3a7', '#a6a095', '#cdc4b0', '#9a9ea8'])
+        : env.around == 'forest' ? ['#1f5a2e', '#2a6b36', '#245f31'] : env.around == 'park' ? ['#3b7f40', '#47904a', '#2f7035'] : ['#a8955c', '#b7a36a'];
+    for (let x = bx - margin; x < ex + margin; x += stepU)
+        for (let y = by - margin; y < ey + margin; y += stepU) {
+            const jx = x + (rnd() - .5) * stepU * .8, jy = y + (rnd() - .5) * stepU * .8, c = palette[Math.floor(rnd() * palette.length)], q = rnd();
+            if (inWater(jx, jy)) continue;
+            const d2 = minD2(jx, jy);
+            if (d2 < (dmin * ppm) ** 2 || d2 > (dmax * ppm) ** 2) continue;
+            if (env.around == 'city') {
+                if (q < .22) continue;
+                out.items.push({ x: jx, y: jy, k: 'b', w: sp * (.4 + q * .4) * ppm, h: sp * (.4 + rnd() * .4) * ppm, c, tall: env.pal == 'glass' || q > .85 });
+            } else {
+                out.items.push({ x: jx, y: jy, k: 't', r: (env.around == 'sand' ? 2.5 + q * 1.5 : 4.5 + q * 4.5) * ppm, c });
+            }
+        }
+    (env.extras || []).forEach(([kind, fx, fy]) => {
+        const rm = ENV_EXTRA_SIZE[kind], bxp = bx + fx * (ex - bx), byp = by + fy * (ey - by);
+        for (let k = 0; k < 30; k++) {            // search outwards for a free spot
+            const ang = k * 2.4, dist = k ? (rm + 80) * ppm * (1 + Math.floor(k / 8)) : 0;
+            const x = bxp + Math.cos(ang) * dist, y = byp + Math.sin(ang) * dist;
+            if (!inWater(x, y) && minD2(x, y) > ((rm + 50) * ppm) ** 2) {
+                out.extras.push({ kind, x, y, rm });
+                break;
+            }
+        }
+    });
+    return out;
+}
+
+// E = { i, P, bb, ppm, sc, cx, cy, w, h, pm }: track index, outline, bounding box, units per metre, camera scale/centre, canvas size, px per metre
+function drawEnvironment(x, E) {
+    const env = envCache[E.i] || (envCache[E.i] = buildEnvironment(E.i, E.P, E.bb, E.ppm));
+    const W = E.w, H = E.h, S = E.sc;
+    const sx = u => W / 2 + (u - E.cx) * S, sy = v => H / 2 + (v - E.cy) * S;
+    const poly = (pts, fill) => {
+        x.beginPath();
+        pts.forEach((p, k) => k ? x.lineTo(sx(p[0]), sy(p[1])) : x.moveTo(sx(p[0]), sy(p[1])));
+        x.closePath();
+        x.fillStyle = fill;
+        x.fill();
+        x.strokeStyle = 'rgba(255,255,255,.45)';
+        x.lineWidth = 2;
+        x.stroke();
+    };
+    if (env.sea) poly(env.sea, '#2f78b5');
+    if (env.lake) poly(env.lake, '#3a86c4');
+    for (const it of env.items) {
+        const px = sx(it.x), py = sy(it.y);
+        if (px < -60 || py < -60 || px > W + 60 || py > H + 60) continue;
+        if (it.k == 't') {
+            const r = Math.max(1.2, it.r * S);
+            x.fillStyle = 'rgba(0,0,0,.22)';
+            x.beginPath();
+            x.arc(px + r * .25, py + r * .25, r, 0, 6.283);
+            x.fill();
+            x.fillStyle = it.c;
+            x.beginPath();
+            x.arc(px, py, r, 0, 6.283);
+            x.fill();
+        } else {
+            const bw = Math.max(2, it.w * S), bh = Math.max(2, it.h * S);
+            if (it.tall) {                       // shadow of a tall building
+                x.fillStyle = 'rgba(0,0,0,.25)';
+                x.fillRect(px - bw / 2 + bw * .18, py - bh / 2 + bh * .18, bw, bh);
+            }
+            x.fillStyle = it.c;
+            x.fillRect(px - bw / 2, py - bh / 2, bw, bh);
+            if (bw > 8) {
+                x.strokeStyle = 'rgba(0,0,0,.3)';
+                x.lineWidth = 1;
+                x.strokeRect(px - bw / 2, py - bh / 2, bw, bh);
+            }
+        }
+    }
+    for (const e of env.extras) {
+        const px = sx(e.x), py = sy(e.y), r = e.rm * E.pm;
+        if (px < -r * 2 || py < -r * 2 || px > W + r * 2 || py > H + r * 2) continue;
+        if (e.kind == 'wheel') {                  // ferris wheel
+            x.strokeStyle = '#d8dce2';
+            x.lineWidth = Math.max(1, r * .08);
+            x.beginPath();
+            x.arc(px, py, r, 0, 6.283);
+            x.stroke();
+            for (let k = 0; k < 12; k++) {
+                x.beginPath();
+                x.moveTo(px, py);
+                x.lineTo(px + r * Math.cos(k * .5236), py + r * Math.sin(k * .5236));
+                x.stroke();
+            }
+        } else if (e.kind == 'tower') {           // observation tower
+            x.fillStyle = 'rgba(0,0,0,.25)';
+            x.beginPath();
+            x.arc(px + r * .5, py + r * .5, r, 0, 6.283);
+            x.fill();
+            x.fillStyle = '#c9ced6';
+            x.beginPath();
+            x.arc(px, py, r, 0, 6.283);
+            x.fill();
+            x.fillStyle = '#6b7380';
+            x.beginPath();
+            x.arc(px, py, r * .45, 0, 6.283);
+            x.fill();
+        } else if (e.kind == 'stadium') {         // stadium: stands around a pitch
+            x.fillStyle = '#6a6f78';
+            x.beginPath();
+            x.ellipse(px, py, r, r * .7, 0, 0, 6.283);
+            x.fill();
+            x.fillStyle = '#4f8f52';
+            x.beginPath();
+            x.ellipse(px, py, r * .68, r * .42, 0, 0, 6.283);
+            x.fill();
+            x.strokeStyle = 'rgba(255,255,255,.7)';
+            x.lineWidth = 1;
+            x.strokeRect(px - r * .5, py - r * .28, r, r * .56);
+        } else {                                  // hotel
+            x.fillStyle = '#cfd5dc';
+            x.fillRect(px - r, py - r * .45, r * 2, r * .9);
+            x.fillStyle = '#5b7a99';
+            x.fillRect(px - r * .9, py - r * .2, r * 1.8, r * .4);
+        }
+    }
+}
+
+// Grandstands next to the track. rw = drawn width of the road in px, at/po = position helpers of drawRace.
+function drawStands(x, E, rw, at, po, L) {
+    const env = ENVIRONMENT[E.i], pm = E.pm, inner = rw / 2 + 24;     // px from the centre line
+    const crowd = ['#d33a3a', '#3a63d3', '#f0c030', '#e8e8e8'];
+    (env.stands || []).forEach(([frac, side, len], n) => {
+        (side ? [side] : [1, -1]).forEach(sg => {
+            const s0 = frac * L, steps = Math.max(2, Math.round(len / 12));
+            const line = lat => {
+                x.beginPath();
+                for (let k = 0; k <= steps; k++) {
+                    const s = s0 + len * k / steps;
+                    // grandstands next to the pit lane are moved back behind the pit buildings
+                    const pit = sg > 0 && ((s % L + L) % L > L - 350 || (s % L) < 430);
+                    const p = po(s, sg * (inner + lat + (pit ? 40 : 0)) / pm);
+                    k ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]);
+                }
+                x.stroke();
+            };
+            x.lineCap = 'butt';
+            x.strokeStyle = '#3a3f48';
+            x.lineWidth = Math.max(4, 24 * pm);
+            line(Math.max(4, 24 * pm) / 2);
+            x.strokeStyle = crowd[(E.i + n) % crowd.length];
+            x.lineWidth = Math.max(3, 13 * pm);
+            x.setLineDash([Math.max(2, 3 * pm), Math.max(1, 1.5 * pm)]);
+            line(Math.max(4, 24 * pm) / 2);
+            x.setLineDash([]);
+        });
+    });
+}
+
+/**
+ * "Car" tab: team selection, power characteristics and the full setup sheet.
+ */
+
+// ---------- Болид ----------
+function renderCarTab() {
+    const c = currentCar();
+    let h = `<div class="card"><h3>Добавить болид</h3><div class="mu">Имя пилота (необязательно)</div><input type="text" id="nn" maxlength="14" style="margin-bottom:8px"><div id="np">${pilotCardHtml(PILOT_DEFAULT, 'new')}</div><div class="mu" style="margin-bottom:8px">${PILOT_NOTE}</div><div class="row"><select id="ns" onchange="fillTeamSelect()">${Object.keys(SERIES).map(k => `<option value="${k}">${SERIES[k].n}</option>`).join('')}</select><select id="nm"></select><button class="pr" onclick="addCar()">＋ Добавить</button></div></div>`;
+    if (c) {
+        const e = effectiveStats(c);
+        h += `<div class="card"><h3>${carLabel(c)}</h3><div class="mu">Имя</div><input type="text" maxlength="14" value="${c.name || ''}" onchange="renameCar(this.value)" style="margin-bottom:8px">${pilotCardHtml(c.pil, 'car')}<div class="mu" style="margin-bottom:8px">${PILOT_NOTE}</div><div class="row"><select onchange="changeTeam(+this.value)">${optionsHtml(SERIES[c.s].t.map(t => t[0]), c.t)}</select><button onclick="duplicateCar()">Копия</button><button onclick="deleteCar()">Удалить</button></div>${presetsHtml()}
+<p class="mu" id="inf"></p><div class="g">Характеристики болида${state.eq ? ' (равная мощность: значения команд не учитываются, настройки сохраняются)' : ''}</div>` + ['Силовая установка', 'Аэродинамика', 'Шасси', 'Надёжность'].map((n, i) => sliderHtml(n, i, e[i], 40, 100, 1, 'onStatInput', state.eq)).join('') + `<div class="row" style="margin-top:8px"><button class="pr" onclick="autoSetup()">⚙️ Подобрать настройки под трассу</button><button onclick="resetSetup()">Сбросить</button></div>`;
+        for (const d of SETUP_PARAMS)
+            h += (d[6] ? `<div class="g">${d[6]}</div>` : '') + sliderHtml(d[1], d[0], c.su[d[0]], d[2], d[3], d[4], 'onSetupInput');
+        h += '</div>';
+    }
+    $('m').innerHTML = h;
+    fillTeamSelect();
+    updateCarInfo();
+}
+
+function fillTeamSelect() {
+    const s = $('ns').value;
+    $('nm').innerHTML = optionsHtml(SERIES[s].t.map(t => t[0]), 0);
+}
+
+function addCar() {
+    const c = makeCar($('ns').value, +$('nm').value, cleanName($('nn').value), readPilotCard($('np')));
+    c.grid = 999;
+    adaptStrategy(c);
+    state.cars.push(c);
+    normalizeGrid();
+    state.a = state.cars.length - 1;
+    render();
+}
+
+function renameCar(v) {
+    currentCar().name = cleanName(v);
+    render();
+}
+
+function changeTeam(i) {
+    const c = currentCar();
+    c.t = i;
+    c.st = teamStats(c.s, i);
+    render();
+}
+
+function duplicateCar() {
+    const c = currentCar();
+    const n = JSON.parse(JSON.stringify(c));
+    n.id = ++nextCarId;
+    if (n.name) n.name = cleanName(n.name + ' 2');
+    n.grid = 999;
+    state.cars.push(n);
+    normalizeGrid();
+    state.a = state.cars.length - 1;
+    render();
+}
+
+function deleteCar() {
+    state.cars.splice(state.a, 1);
+    normalizeGrid();
+    state.a = Math.max(0, state.a - 1);
+    render();
+}
+
+function onStatInput(e) {
+    currentCar().st[+e.dataset.k] = +e.value;
+    e.previousElementSibling.textContent = e.value;
+    updateCarInfo();
+}
+
+function onSetupInput(e) {
+    currentCar().su[e.dataset.k] = +e.value;
+    e.previousElementSibling.textContent = e.value;
+    updateCarInfo();
+}
+
+function autoSetup() {
+    const c = currentCar();
+    for (const d of SETUP_PARAMS)
+        c.su[d[0]] = +(Math.round(idealSetupValue(d, state.tr) / d[4]) * d[4]).toFixed(2);
+    renderCarTab();
+}
+
+function resetSetup() {
+    const c = currentCar();
+    for (const d of SETUP_PARAMS)
+        c.su[d[0]] = d[5];
+    renderCarTab();
+}
+
+function updateCarInfo() {
+    const c = currentCar();
+    const e = $('inf');
+    if (!c || !e)
+        return;
+    e.textContent = `${TRACKS[state.tr][TRACK.NAME]}: чистый круг ≈ ${formatTime(baseLapTime(c, state.tr))} · потери из-за настроек +${setupPenalty(c, state.tr).toFixed(2)} с · мощность ≈ ${horsepower(c)} л.с.`;
+}
+
+/**
+ * "Strategy" tab: stints, pit laps, fuel mix, ERS mode, fuel load and the predicted race time.
+ */
+
+// ---------- Стратегия ----------
+function renderStrategyTab() {
+    const c = currentCar();
+    if (!c)
+        return renderNoCar();
+    const N = raceLaps();
+    const st = c.str;
+    const p = pitLaps(c, N);
+    const n = st.f.length;
+    let h = weatherCardHtml() + `<div class="card"><h3>Дистанция гонки</h3><div class="seg">${[25, 35, 50, 100].map(x => `<button${state.pct == x ? ' class="on"' : ''} onclick="state.pct=${x};renderStrategyTab()">${x}% · ${Math.max(3, Math.round(TRACKS[state.tr][TRACK.LAPS] * x / 100))} кр.</button>`).join('')}</div></div>
+<div class="card"><h3>Пит-стопы: ${carLabel(c)}</h3><div class="seg">${[0, 1, 2, 3].map(x => `<button${n == x ? ' class="on"' : ''} onclick="setStopCount(${x})">${x}</button>`).join('')}</div>`;
+    for (let j = 0; j <= n; j++) {
+        h += `<div class="g">Стинт ${j + 1}</div><div class="seg">${'SMHIW'.split('').map(m => `<button${st.c[j] == m ? ' class="on"' : ''} onclick="setStintCompound(${j},'${m}')">${TYRES[m].n}</button>`).join('')}</div>`;
+        if (j < n)
+            h += sliderHtml('Заезд на пит-стоп, круг', 'pit' + j, p[j], 3, N - 3, 1, 'onPitLapInput').replace('data-k="pit' + j + '"', 'data-k="' + j + '"');
+    }
+    h += `<button class="pr" style="width:100%;margin-top:12px" onclick="autoStrategy()">⚡ Найти оптимальную стратегию</button></div>${raceStrategyHtml(c, N)}<div id="out"></div>`;
+    $('m').innerHTML = h;
+    renderStrategyResult();
+}
+
+function raceStrategyHtml(c, N) {
+    const Q = SERIES[c.s];
+    const fn = startFuel(c, N);
+    const need = N * fuelBurnPerLap(c);
+    return `<div class="card"><h3>Стратегия гонки (как в игре)</h3><div class="g">Топливная смесь</div><div class="seg">${[['L', 'Бедная'], ['S', 'Стандарт'], ['R', 'Богатая'], ['X', 'Максимум']].map(a => `<button${fuelMix(c) == a[0] ? ' class="on"' : ''} onclick="setFuelMix('${a[0]}')">${a[1]}</button>`).join('')}</div>${c.s == 'f1' ? `<div class="g">Режим ERS</div><div class="seg">${[['N', 'Нет'], ['M', 'Средний'], ['O', 'Обгон'], ['H', 'Хотлэп']].map(a => `<button${ersMode(c) == a[0] ? ' class="on"' : ''} onclick="setErsMode('${a[0]}')">${a[1]}</button>`).join('')}</div>` : ''}${sliderHtml('Топливо на старте, кг', 'fl', Math.round(fn * 10) / 10, 5, Q.x, .5, 'onFuelInput')}<div class="mu">Нужно на гонку ≈ ${need.toFixed(1)} кг · ${fn >= need ? 'запас' : 'не хватит'} ${Math.abs(fn - need).toFixed(1)} кг</div><button style="margin-top:6px" onclick="currentCar().str.fl=null;renderStrategyTab()">Авто-топливо</button></div>`;
+}
+
+function setFuelMix(v) {
+    currentCar().str.fm = v;
+    renderStrategyTab();
+}
+
+function setErsMode(v) {
+    currentCar().str.er = v;
+    renderStrategyTab();
+}
+
+function onFuelInput(e) {
+    currentCar().str.fl = +e.value;
+    e.previousElementSibling.textContent = e.value;
+    renderStrategyResult();
+}
+
+function setStopCount(n) {
+    const st = currentCar().str;
+    while (st.c.length < n + 1)
+        st.c.push('H');
+    st.c.length = n + 1;
+    st.f = [...Array(n)].map((_, j) => (j + 1) / (n + 1));
+    renderStrategyTab();
+}
+
+function setStintCompound(j, m) {
+    currentCar().str.c[j] = m;
+    renderStrategyTab();
+}
+
+function onPitLapInput(e) {
+    const c = currentCar();
+    const N = raceLaps();
+    const p = pitLaps(c, N);
+    const j = +e.dataset.k;
+    const v = clamp(+e.value, (j ? p[j - 1] : 0) + 3, (j < p.length - 1 ? p[j + 1] : N) - 3);
+    e.value = v;
+    e.previousElementSibling.textContent = v;
+    c.str.f[j] = v / N;
+    renderStrategyResult();
+}
+
+function autoStrategy() {
+    const c = currentCar();
+    const tr = TRACKS[state.tr];
+    const N = raceLaps();
+    const b = baseLapTime(c, state.tr);
+    let best = null;
+    for (let n = 1; n <= 3; n++) {
+        const stp = n == 3 ? Math.max(2, Math.round(N / 18)) : n == 2 ? 2 : 1;
+        const cs = [];
+        const ps = [];
+        (function g(a) {
+            if (a.length == n + 1)
+                return cs.push(a);
+            for (const m of COMPOUND_SETS[state.weather])
+                g([...a, m]);
+        })([]);
+        (function g(a, s) {
+            if (a.length == n)
+                return ps.push(a);
+            for (let p = s; p <= N - 3; p += stp)
+                g([...a, p], p + 4);
+        })([], 4);
+        for (const a of cs) {
+            if (state.weather == 'dry' && new Set(a).size < 2)
+                continue;
+            for (const p of ps) {
+                const t = simulateRace(b, tr, N, a, p, c).t;
+                if (!best || t < best.t)
+                    best = { t, a, p };
+            }
+        }
+    }
+    if (best) {
+        c.str = { ...c.str, c: best.a, f: best.p.map(p => p / N) };
+        renderStrategyTab();
+    }
+}
+
+function renderStrategyResult() {
+    const c = currentCar();
+    const tr = TRACKS[state.tr];
+    const N = raceLaps();
+    const p = pitLaps(c, N);
+    const r = simulateRace(baseLapTime(c, state.tr), tr, N, c.str.c, p, c);
+    const e = effectiveStats(c);
+    const ok = state.weather != 'dry' || new Set(c.str.c).size > 1;   // the two-compound rule applies to dry races only
+    const rows = state.cars.map(x => {
+        const q = pitLaps(x, N);
+        return { x, t: simulateRace(baseLapTime(x, state.tr), tr, N, x.str.c, q, x).t };
+    }).sort((a, b) => a.t - b.t);
+    $('out').innerHTML = `<div class="card"><div class="mu">Время гонки · ${tr[TRACK.NAME]} · ${N} кр.</div><div class="big">${formatTime(r.t)}</div>
+<div class="mu">Средний круг ${formatTime(r.t / N)} · пит-стопы ${p.length}×${tr[TRACK.PIT_LOSS]} с · риск отказа ≈ ${((100 - e[3]) * .15 * N / 60).toFixed(1)}%</div>
+<div class="mu">Топливо на финише: ${r.fr.toFixed(1)} кг</div>${r.fr < 0 ? '<div class="bad">Топлива не хватит до финиша</div>' : ''}${ok ? '' : '<div class="bad">В сухой гонке нужно минимум два разных состава шин</div>'}<canvas id="cv"></canvas>
+<div class="mu">Время круга по ходу гонки (пики пит-стопов обрезаны), фон — состав шин</div></div>
+<div class="card"><h3>Сравнение болидов в гараже</h3><table>${rows.map((q, i) => `<tr><td>${i + 1}</td><td><span style="color:${teamColor(q.x)}">●</span> ${carLabel(q.x)}</td><td>${formatTime(q.t)}</td><td>${i ? '+' + (q.t - rows[0].t).toFixed(1) + ' с' : ''}</td></tr>`).join('')}</table></div>`;
+    const cv = $('cv');
+    const w = cv.width = cv.clientWidth;
+    const h = cv.height = 150;
+    const x = cv.getContext('2d');
+    const mn = Math.min(...r.l);
+    const mx = mn + 6;
+    const ed = [0, ...p, N];
+    for (let j = 0; j < ed.length - 1; j++) {
+        x.globalAlpha = .3;
+        x.fillStyle = TYRES[c.str.c[j]].c;
+        x.fillRect(ed[j] / N * w, 0, (ed[j + 1] - ed[j]) / N * w, h);
+    }
+    x.globalAlpha = 1;
+    x.strokeStyle = getComputedStyle(document.body).color;
+    x.lineWidth = 2;
+    x.beginPath();
+    r.l.forEach((v, i) => {
+        const X = (i + .5) / N * w;
+        const Y = h - 8 - (Math.min(v, mx) - mn) / (mx - mn) * (h - 16);
+        i ? x.lineTo(X, Y) : x.moveTo(X, Y);
+    });
+    x.stroke();
+}
+
+/**
+ * "Test" tab: race animation (canvas), telemetry, standings and the starting grid.
+ */
+
+function renderTestTab() {
+    if (!state.cars.length)
+        return renderNoCar();
+    const tr = TRACKS[state.tr];
+    const pf = trackProfile(state.tr);
+    const rs = carsByPace();
+    const key = state.tr + '|' + rs.map(q => q.c.id + ':' + q.c.grid + ':' + q.t.toFixed(3) + JSON.stringify(q.c.str) + state.pct + state.human + state.dnf + JSON.stringify(q.c.pil) + state.weather).join();
+    if (state.key != key) {
+        state.key = key;
+        state.run = false;
+        initSimulation();
+    }
+    const c = currentCar();
+    const gs = [...state.cars].sort((a, b) => a.grid - b.grid);
+    $('m').innerHTML = `<div class="stage">
+<div class="bcast"><span class="live"><b>F1</b>${tr[TRACK.NAME]}</span><span id="lapc"></span></div>
+<div class="tools">
+<button id="rb" class="pr" onclick="toggleRun()">${state.run ? '⏸' : '▶'}</button>
+<button onclick="initSimulation();drawRace()">↺</button>
+<button id="spb" onclick="cycleSpeed()">${state.spd}×</button>
+<button onclick="zoomMap(1.4)">＋</button>
+<button onclick="zoomMap(1 / 1.4)">－</button>
+<button class="${state.cam ? 'on' : ''}" onclick="toggleCamera()">📹</button>
+<button id="wxb" class="${state.weather != 'dry' ? 'on' : ''}" onclick="cycleWeather()">${WEATHER_MODES[state.weather].icon}</button>
+<button class="${state.human ? 'on' : ''}" onclick="toggleHuman()">🧑</button>
+<button class="${state.dnf ? 'on' : ''}" onclick="toggleDnf()">💥</button>
+<button id="pitb" onclick="togglePitRequest()">🛠</button>
+${state.sim && state.sim.done ? '<button onclick="showResults()">📊</button>' : ''}
+</div>
+<div class="view"><canvas id="tc"></canvas><div id="tw" class="tower"></div><canvas id="hc" class="hud"></canvas></div>
+</div>
+<div class="card"><h3>Телеметрия: ${carLabel(c)}</h3><div class="mu" id="tgp"></div><div class="mu" id="tpt"></div><canvas id="sp" style="height:100px;margin:8px 0"></canvas><div class="mu" id="tsc"></div></div>
+<div class="card"><h3>Положение в гонке</h3><table><tr><th>#</th><th>Болид</th><th>Лидер</th><th>Впереди</th><th>км/ч</th><th>Шины</th><th>Кр.</th></tr><tbody id="lv"></tbody></table><div class="mu" id="lg"></div></div>
+<div class="card"><h3>Стартовая решётка и прогноз круга</h3><table><tr><th>Старт</th><th>Болид</th><th>Круг</th><th>С1</th><th>С2</th><th>С3</th></tr>${gs.map(x => {
+        const t = rs.find(q => q.c === x).t;
+        return `<tr><td><select onchange="setGridPosition(${x.id},+this.value)">${optionsHtml(state.cars.map((_, j) => 'P' + (j + 1)), x.grid)}</select></td><td><span style="color:${teamColor(x)}">●</span> ${carLabel(x)}</td><td>${formatTime(t)}</td>${pf.sh.map(h => `<td>${(t * h).toFixed(3)}</td>`).join('')}</tr>`;
+    }).join('')}</table>
+<button style="margin-top:8px;width:100%" onclick="autoGrid()">🏁 Расставить по темпу</button></div>
+<div class="mu">${weatherNote(state.tr)}</div>
+<div class="mu">Кнопки: ▶ старт/пауза · ↺ сброс · скорость симуляции · ＋/－ масштаб · 📹 камера за болидом · 🌦 погода (сухо/сыро/дождь) · 🧑 реалистичная езда · 💥 аварии и DNF · 🛠 заезд в боксы · 📊 итоги. Камера следует за выбранным болидом (выбор — чипы сверху или строка таймтаблицы). Белая черта — старт/финиш, жёлтая и синяя — границы секторов, зелёная полоса — зоны DRS. Жёлтая линия — оптимальная траектория, бледная белая — реальная линия проезда. Слева у старта — питлейн с боксами (лимит 80 км/ч). Болиды заезжают в боксы по своей стратегии (вкладка «Стратегия»). Уровень пилота задаётся при добавлении болида.</div>`;
+    drawRace();
+}
+
+function togglePitRequest() {
+    const c = state.sim.cs.find(q => q.c === currentCar());
+    if (c && !c.pit)
+        c.req = !c.req;
+    drawRace();
+}
+
+function setGridPosition(id, g) {
+    const c = state.cars.find(x => x.id == id);
+    const o = state.cars.find(x => x.grid == g);
+    o.grid = c.grid;
+    c.grid = g;
+    renderTestTab();
+}
+
+function autoGrid() {
+    carsByPace().forEach((q, i) => q.c.grid = i);
+    renderTestTab();
+}
+
+function toggleRun() {
+    state.run = !state.run;
+    if (!state.run) engineOff();
+    lastFrameTime = performance.now();
+    $('rb').textContent = state.run ? '⏸' : '▶';
+    if (state.run)
+        requestAnimationFrame(animationLoop);
+}
+
+function animationLoop(ts) {
+    if (!state.run || state.tab != 2)
+        return;
+    let r = Math.min(.1, (ts - lastFrameTime) / 1000) * state.spd;
+    lastFrameTime = ts;
+    while (r > 0) {
+        const d = Math.min(.04, r);
+        stepSimulation(d);
+        r -= d;
+    }
+    drawRace();
+    if (state.sim.done) {
+        state.run = false;
+        $('rb').textContent = '🏁 Финиш';
+        showResults();
+        return;
+    }
+    requestAnimationFrame(animationLoop);
+}
+
+// Draws the map (camera, track, pit lane, racing lines, cars, mini-map) and refreshes tables and telemetry.
+// ---- Car status HUD at the bottom of the map: tyres per wheel, speed and gear, pedals, ERS, fuel, damage ----
+function drawHud(c, z, L) {
+    const cv = $('hc'), W = cv.width = cv.clientWidth, H = cv.height = 100, g = cv.getContext('2d');
+    const car = c.c, pf = trackProfile(state.tr), f1 = car.s == 'f1';
+    g.fillStyle = 'rgba(11,13,18,.8)';
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = '#e10600';
+    g.fillRect(0, 0, W, 2);
+    const wearColor = w => w < 60 ? '#2e9e4f' : w < 85 ? '#f0a020' : '#e53935';
+    g.textAlign = 'center';
+    // car seen from above; each wheel is coloured by its own wear (front tyres and the tyres loaded by the corners wear faster)
+    g.save();
+    g.translate(42, 54);
+    g.fillStyle = c.out ? '#666' : teamColor(car);
+    g.beginPath();
+    g.moveTo(0, -32); g.lineTo(5, -14); g.lineTo(6, 20); g.lineTo(-6, 20); g.lineTo(-5, -14);
+    g.closePath();
+    g.fill();
+    g.fillStyle = c.dg > 0 ? '#ff8f00' : '#d8d8d8';          // front wing turns orange when damaged
+    g.fillRect(-16, -37, 32, 5);
+    g.fillStyle = '#d8d8d8';
+    g.fillRect(-12, 24, 24, 5);
+    g.font = '700 8px system-ui';
+    [[-18, -20, 1.1, 1], [6, -20, 1.1, -1], [-18, 12, .9, 1], [6, 12, .9, -1]].forEach(([x, y, k, side]) => {
+        const w = clamp(c.wr * k * (1 + side * (pf.rs - .5) * .6), 0, 100);
+        g.fillStyle = wearColor(w);
+        g.fillRect(x, y, 12, 20);
+        g.fillStyle = '#fff';
+        g.fillText(Math.round(w), x + 6, y + 13);
+    });
+    g.restore();
+    // speed, gear and status badge
+    g.textAlign = 'left';
+    g.fillStyle = '#fff';
+    g.font = '700 30px system-ui';
+    g.fillText(Math.round(c.v), 84, 44);
+    g.font = '10px system-ui';
+    g.fillStyle = '#9aa1ad';
+    g.fillText('km/h', 86, 58);
+    g.fillStyle = '#1b1f27';
+    g.fillRect(84, 66, 26, 26);
+    g.fillStyle = '#fff';
+    g.font = '700 18px system-ui';
+    g.textAlign = 'center';
+    g.fillText(c.s < 0 && c.v < 3 ? 'N' : c.gr, 97, 85);
+    const badge = c.out ? ['DNF', '#e53935'] : c.pit ? ['PIT', '#f0a020'] : c.req ? ['PIT REQ', '#f0a020'] : c.dr ? ['DRS', '#2e9e4f'] : null;
+    if (badge) {
+        g.font = '700 11px system-ui';
+        g.fillStyle = badge[1];
+        g.fillRect(114, 70, g.measureText(badge[0]).width + 10, 18);
+        g.fillStyle = '#fff';
+        g.fillText(badge[0], 114 + (g.measureText(badge[0]).width + 10) / 2, 83);
+    }
+    // pedals
+    [[176, c.th, '#2e9e4f'], [190, c.br, '#e53935']].forEach(([x, v, col]) => {
+        g.fillStyle = '#1b1f27';
+        g.fillRect(x, 20, 10, 70);
+        g.fillStyle = col;
+        const h = 70 * clamp(v, 0, 100) / 100;
+        g.fillRect(x, 90 - h, 10, h);
+    });
+    // horizontal bars: ERS, fuel, tyres
+    const x0 = 214, bw = Math.min(360, W - x0 - 10);
+    const bar = (y, label, frac, color, text) => {
+        g.textAlign = 'left';
+        g.font = '700 9px system-ui';
+        g.fillStyle = '#9aa1ad';
+        g.fillText(label, x0, y);
+        g.textAlign = 'right';
+        g.fillStyle = '#fff';
+        g.fillText(text, x0 + bw, y);
+        g.fillStyle = '#1b1f27';
+        g.fillRect(x0, y + 3, bw, 8);
+        g.fillStyle = color;
+        g.fillRect(x0, y + 3, bw * clamp(frac, 0, 1), 8);
+    };
+    const fuel0 = startFuel(car, raceLaps()), fuelLeft = Math.max(0, fuel0 - fuelBurnPerLap(car) * Math.max(0, c.s) / L);
+    if (f1) bar(18, 'ERS' + (c.dp ? ' ▶ DEPLOY' : ''), c.er / 100, c.dp ? '#4fc3f7' : '#1e88e5', Math.round(c.er) + '%');
+    else bar(18, 'DAMAGE', c.dg > 0 ? .5 : 0, '#f0a020', c.dg > 0 ? '+' + c.dg.toFixed(1) + ' s/lap' : 'OK');
+    bar(46, 'FUEL', fuelLeft / fuel0, '#ffb300', fuelLeft.toFixed(1) + ' kg');
+    bar(74, 'TYRES ' + c.comp + ' · ' + c.age.toFixed(1) + ' laps', c.wr / 100, wearColor(c.wr), c.wr + '%');
+    if (c.out) {
+        g.fillStyle = 'rgba(11,13,18,.7)';
+        g.fillRect(0, 0, W, H);
+        g.textAlign = 'center';
+        g.fillStyle = '#e53935';
+        g.font = '700 22px system-ui';
+        g.fillText('✖ DNF', W / 2, 44);
+        g.font = '12px system-ui';
+        g.fillStyle = '#fff';
+        g.fillText(c.why, W / 2, 68);
+    }
+}
+
+// ---- Broadcast overlay: lap counter in the top bar and the timing tower on the left ----
+function updateBroadcast(ord, L) {
+    const z = state.sim, N = raceLaps(), lead = ord[0], mode = state.gap;
+    $('lapc').textContent = WEATHER_MODES[state.weather].icon + ' ' + (z.done ? '🏁 ФИНИШ' : 'КРУГ ' + Math.min(N, Math.max(1, lead.lp)) + '/' + N);
+    const tower = $('tw'), sel = currentCar();
+    // The rows are rebuilt only when the order, the selected car or the mode changes,
+    // so taps on a row are not lost while the animation updates the numbers.
+    const key = ord.map(c => c.c.id).join() + '|' + sel.id + '|' + mode;
+    if (tower.dataset.key !== key) {
+        tower.dataset.key = key;
+        tower.innerHTML = `<div class="tw-h" onclick="toggleGapMode()">${mode == 'int' ? 'ИНТЕРВАЛ' : 'ОТРЫВ'}</div>` + ord.map((c, r) =>
+            `<div class="tw-r${c.c === sel ? ' sel' : ''}" onclick="selectCar(${c.c.id})"><b>${r + 1}</b><i style="background:${teamColor(c.c)}"></i><span>${carShort(c.c)}</span><em></em><u></u></div>`).join('');
+    }
+    const rows = tower.querySelectorAll('.tw-r');
+    ord.forEach((c, r) => {
+        rows[r].children[3].textContent = c.out ? 'DNF' : c.fin ? '🏁' : c.pit ? 'ПИТ' : r ? gapText(c, mode == 'int' ? ord[r - 1] : lead, L) : 'ЛИДЕР';
+        rows[r].children[4].textContent = c.comp;
+        rows[r].children[4].style.color = TYRES[c.comp].c;
+    });
+}
+
+function cycleSpeed() {
+    state.spd = state.spd == 1 ? 5 : state.spd == 5 ? 20 : 1;
+    $('spb').textContent = state.spd + '×';
+}
+
+function zoomMap(f) {
+    state.z = clamp(state.z * f, .5, 4);
+    drawRace();
+}
+
+function toggleCamera() {
+    state.cam = !state.cam;
+    state.kx = state.ky = state.ks = null;
+    renderTestTab();
+}
+
+function toggleDnf() {
+    state.dnf = !state.dnf;
+    renderTestTab();
+}
+
+function toggleHuman() {
+    state.human = !state.human;
+    renderTestTab();
+}
+
+// "+0.842", "+12.4", "+1:04.2" or "+1 кр." (a lap or more behind), read from the timing loops.
+function gapText(c, ref, L) {
+    const laps = Math.floor((ref.s - c.s) / L + .02);
+    if (laps >= 1) return '+' + laps + ' кр.';
+    const d = gapSeconds(c, ref);
+    return d == null ? '—' : '+' + formatGapTime(d);
+}
+
+function toggleGapMode() {
+    state.gap = state.gap == 'int' ? 'gap' : 'int';
+}
+
+function selectCar(id) {
+    state.a = state.cars.findIndex(c => c.id === id);
+    render();
+}
+
+function drawRace() {
+    const cv = $('tc');
+    if (!cv || !state.sim)
+        return;
+    const z = state.sim;
+    const pf = trackProfile(state.tr);
+    const P = trackPath(state.tr);
+    const L = pf.Lm;
+    const N = P.length;
+    const w = cv.width = cv.clientWidth;
+    const h = cv.height = w < 700 ? Math.round(clamp(window.innerHeight * .6, 340, 620)) : Math.round(clamp(window.innerHeight * .64, 380, 780));
+    const x = cv.getContext('2d');
+    const fg = getComputedStyle(document.body).color;
+    const sel = currentCar();
+    const ord = raceOrder(z.cs);
+    if (!pf.ppm) {
+        let t = 0;
+        P.forEach((q, i) => {
+            const b = P[(i + 1) % N];
+            t += Math.hypot(b[0] - q[0], b[1] - q[1]);
+        });
+        pf.ppm = t / L;
+        const xs = P.map(p => p[0]);
+        const ys = P.map(p => p[1]);
+        pf.bb = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+    }
+    const [bx, by, ex, ey] = pf.bb;
+    const fit = Math.min((w - 30) / (ex - bx), (h - 150) / (ey - by));   // leave room for the status panel at the bottom
+    const fc = z.cs.find(q => q.c === sel) || z.cs[0];
+    // point and heading at a given distance along the lap
+    const at = s => {
+        const k = indexAtDistance(pf, s);
+        const b = P[(k + 1) % N];
+        const t = Math.min(1, Math.max(0, (((s % L) + L) % L - pf.D[k]) / pf.ds[k]));
+        return [P[k][0] + (b[0] - P[k][0]) * t, P[k][1] + (b[1] - P[k][1]) * t, Math.atan2(b[1] - P[k][1], b[0] - P[k][0])];
+    };
+    // camera: follow the selected car or fit the whole track
+    let tx;
+    let ty;
+    let ts;
+    if (state.cam) {
+        const f = at(fc.s);
+        tx = f[0];
+        ty = f[1];
+        ts = Math.min(w, h) / (300 / state.z) / pf.ppm;
+    }
+    else {
+        tx = (bx + ex) / 2;
+        ts = fit;
+        ty = (by + ey) / 2 + 55 / ts;                 // move the track up, away from the status panel
+    }
+    state.kx = state.kx == null ? tx : state.kx + (tx - state.kx) * .3;
+    state.ky = state.ky == null ? ty : state.ky + (ty - state.ky) * .3;
+    state.ks = state.ks == null ? ts : state.ks + (ts - state.ks) * .3;
+    const sc = state.ks;
+    const pt = q => [w / 2 + (q[0] - state.kx) * sc, h / 2 + (q[1] - state.ky) * sc];
+    const pm = sc * pf.ppm;
+    const rw = Math.max(14, Math.min(50, 14 * pm * 1.4));
+    const po = (s, m) => {
+        const f = at(s);
+        const a = pt(f);
+        return [a[0] - Math.sin(f[2]) * m * pm, a[1] + Math.cos(f[2]) * m * pm, f[2]];
+    };
+    const ln = a => {
+        x.beginPath();
+        a.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1]));
+    };
+    const sm = v => {
+        v = clamp(v, 0, 1);
+        return v * v * (3 - 2 * v);
+    };
+    // ---- scenery and track surface ----
+    x.fillStyle = ENVIRONMENT[state.tr].ground;
+    x.fillRect(0, 0, w, h);
+    const E = { i: state.tr, P, bb: pf.bb, ppm: pf.ppm, sc, cx: state.kx, cy: state.ky, w, h, pm };
+    drawEnvironment(x, E);                         // sea, lakes, trees, buildings, landmarks
+    const wetIdx = state.weather == 'dry' ? 0 : state.weather == 'damp' ? 1 : 2;
+    x.lineJoin = 'round';
+    x.lineCap = 'butt';
+    const tr = () => {
+        ln(P.map(pt));
+        x.closePath();
+    };
+    const edge = ENVIRONMENT[state.tr].edge;
+    x.strokeStyle = edge == 'ricard' ? '#3d6fcf' : edge == 'sand' ? 'rgba(214,190,130,.75)' : 'rgba(205,180,120,.55)';
+    x.lineWidth = rw + 34;
+    tr();
+    x.stroke();
+    if (edge == 'ricard') {                        // the blue and red run-off of Paul Ricard
+        x.strokeStyle = '#d23c3c';
+        x.setLineDash([rw * 2, rw * 2]);
+        tr();
+        x.stroke();
+        x.setLineDash([]);
+    }
+    x.strokeStyle = '#e8e8e8';
+    x.lineWidth = rw + 9;
+    tr();
+    x.stroke();
+    x.strokeStyle = '#d32f2f';
+    x.setLineDash([10, 10]);
+    tr();
+    x.stroke();
+    x.setLineDash([]);
+    x.strokeStyle = ['#3b3f45', '#33373d', '#2a2e34'][wetIdx];     // wet asphalt is darker
+    x.lineWidth = rw;
+    tr();
+    x.stroke();
+    if (wetIdx) {                                  // sheen of the water on the surface
+        x.strokeStyle = 'rgba(190,210,235,.10)';
+        x.lineWidth = rw * .55;
+        tr();
+        x.stroke();
+    }
+    x.strokeStyle = '#2e9e4f';
+    x.lineWidth = Math.max(2, rw * .12);
+    for (let k = 0; k < N; k++)
+        if (pf.dr[k]) {
+            const a = pt(P[k]);
+            const b = pt(P[(k + 1) % N]);
+            x.beginPath();
+            x.moveTo(a[0], a[1]);
+            x.lineTo(b[0], b[1]);
+            x.stroke();
+        }
+    // питлейн
+    drawStands(x, E, rw, at, po, L);
+    // ---- pit lane and garages ----
+    const pl = [];
+    for (let s = L - 350; s <= L + 430; s += 10)
+        pl.push(po(s, 22 * sm((s - (L - 350)) / 60) * sm((L + 430 - s) / 60)));
+    x.strokeStyle = '#e8e8e8';
+    x.lineWidth = Math.max(7, 11 * pm) + 3;
+    ln(pl);
+    x.stroke();
+    x.strokeStyle = '#555a63';
+    x.lineWidth = Math.max(7, 11 * pm);
+    ln(pl);
+    x.stroke();
+    const bl = Math.max(6, 16 * pm);
+    const bw = Math.max(5, 8 * pm);
+    SERIES[sel.s].t.forEach((t, i) => {
+        const p = po(L + 30 + i * 20, 31);
+        x.save();
+        x.translate(p[0], p[1]);
+        x.rotate(p[2]);
+        x.fillStyle = t[t.length - 1];
+        x.fillRect(-bl / 2, -bw / 2, bl, bw);
+        x.strokeStyle = '#fff';
+        x.lineWidth = 1;
+        x.strokeRect(-bl / 2, -bw / 2, bl, bw);
+        x.restore();
+    });
+    x.font = 'bold 10px system-ui';
+    x.textAlign = 'center';
+    [['PIT IN', L - 350], ['PIT OUT', L + 430]].forEach(q => {
+        const p = po(q[1], 36);
+        x.lineWidth = 3;
+        x.strokeStyle = '#000';
+        x.strokeText(q[0], p[0], p[1]);
+        x.fillStyle = '#fff';
+        x.fillText(q[0], p[0], p[1]);
+    });
+    // линии: реальная (бледная) и оптимальная
+    // ---- racing lines: optimal (yellow) and actual (faint) ----
+    const rl = f => {
+        const a = [];
+        for (let k = 0; k < N; k += 2)
+            a.push(po(pf.D[k], pf.off[k] * 6 * f));
+        a.push(a[0]);
+        ln(a);
+        x.stroke();
+    };
+    x.strokeStyle = 'rgba(255,255,255,.3)';
+    x.lineWidth = 2;
+    rl(.55);
+    x.strokeStyle = '#ffe600';
+    x.lineWidth = 2.5;
+    rl(1);
+    const mk = (d, c) => {
+        const f = at(d);
+        const a = pt(f);
+        const nx = -Math.sin(f[2]);
+        const ny = Math.cos(f[2]);
+        const r = rw / 2 + 5;
+        x.strokeStyle = c;
+        x.lineWidth = 4;
+        x.beginPath();
+        x.moveTo(a[0] + nx * r, a[1] + ny * r);
+        x.lineTo(a[0] - nx * r, a[1] - ny * r);
+        x.stroke();
+    };
+    mk(0, '#fff');
+    mk(L / 3, '#ffd600');
+    mk(2 * L / 3, '#2979ff');
+    if (!pf.cn) {
+        pf.cn = [];
+        let c0 = 0;
+        for (let k = 0; k < N; k++)
+            if (pf.bp[k])
+                pf.cn.push([pf.D[k], ++c0]);
+    }
+    x.font = 'bold 10px system-ui';
+    x.textAlign = 'center';
+    pf.cn.forEach(q => {
+        mk(q[0], '#ff5252');
+        const p = po(q[0] + 45, -(rw / 2 + 18) / pm);
+        x.lineWidth = 3;
+        x.strokeStyle = '#000';
+        x.strokeText('T' + q[1], p[0], p[1]);
+        x.fillStyle = '#fff';
+        x.fillText('T' + q[1], p[0], p[1]);
+    });
+    x.textAlign = 'start';
+    if (wetIdx) {                                  // grey light of a rainy sky
+        x.fillStyle = wetIdx == 1 ? 'rgba(20,30,50,.10)' : 'rgba(10,20,40,.22)';
+        x.fillRect(0, 0, w, h);
+    }
+    // ---- flat 2D car sprite (top view) ----
+    const car = (px, py, an, co, big) => {
+        x.save();
+        x.translate(px, py);
+        x.rotate(an);
+        const k = big ? 1.3 : 1;
+        x.scale(k, k);
+        x.fillStyle = '#111';
+        [[-9, -6.3], [-9, 3.6], [4, -6.3], [4, 3.6]].forEach(q => x.fillRect(q[0], q[1], 5.5, 2.7));
+        x.fillStyle = co;
+        x.fillRect(-13, -5.5, 3, 11);
+        x.fillRect(10.5, -5.5, 3, 11);
+        x.beginPath();
+        x.moveTo(-11, -2.8);
+        x.lineTo(3, -3.4);
+        x.lineTo(11, -1);
+        x.lineTo(11, 1);
+        x.lineTo(3, 3.4);
+        x.lineTo(-11, 2.8);
+        x.closePath();
+        x.fill();
+        x.strokeStyle = '#000';
+        x.lineWidth = .8;
+        x.stroke();
+        x.fillStyle = '#fff';
+        x.beginPath();
+        x.arc(-1, 0, 1.9, 0, 6.283);
+        x.fill();
+        x.restore();
+    };
+    // lateral offset of a car: racing line, grid slot, overtake manoeuvre, pit lane
+    const latOf = c => {
+        const k = indexAtDistance(pf, c.s);
+        let m = pf.off[k] * 6 * c.lw + c.lo;
+        if (c.s < 150)
+            m += (c.c.grid % 2 ? 1 : -1) * 6 * clamp(1 - c.s / 150, 0, 1);
+        if (c.pit) {
+            const b = sm(clamp((c.s - c.ei) / 60, 0, 1) * clamp((c.ex - c.s) / 60, 0, 1));
+            m = m * (1 - b) + 22 * b;
+        }
+        return m;
+    };
+    for (const c of z.cs.slice().sort((a, b) => (a.c === sel) - (b.c === sel))) {
+        const a = po(c.s, latOf(c));
+        const isS = c.c === sel;
+        if (isS) {
+            x.strokeStyle = fg;
+            x.lineWidth = 2;
+            x.beginPath();
+            x.arc(a[0], a[1], 21, 0, 6.283);
+            x.stroke();
+        }
+        x.globalAlpha = c.out ? .45 : 1;
+        car(a[0], a[1], a[2], teamColor(c.c), isS);
+        x.font = 'bold 11px system-ui';
+        const t2 = (c.out ? '✖' : ord.indexOf(c) + 1) + ' ' + carShort(c.c);
+        x.lineWidth = 3;
+        x.strokeStyle = '#000';
+        x.strokeText(t2, a[0], a[1] - 17);
+        x.fillStyle = '#fff';
+        x.fillText(t2, a[0], a[1] - 17);
+        x.globalAlpha = 1;
+    }
+    x.textAlign = 'start';
+    if (wetIdx) {                                  // rain streaks
+        x.strokeStyle = 'rgba(205,225,255,.4)';
+        x.lineWidth = 1;
+        x.beginPath();
+        for (let q = wetIdx == 1 ? 40 : 160; q > 0; q--) {
+            const rx = Math.random() * w, ry = Math.random() * h;
+            x.moveTo(rx, ry);
+            x.lineTo(rx - 4, ry + 12);
+        }
+        x.stroke();
+    }
+    // ---- mini-map ----
+    if (state.cam) {
+        const mw = 112;
+        const mh = 92;
+        const m0 = w - mw - 8;
+        const mm = Math.min((mw - 12) / (ex - bx), (mh - 12) / (ey - by));
+        const q = p => [m0 + 6 + (p[0] - bx) * mm, 14 + (p[1] - by) * mm];
+        x.fillStyle = 'rgba(0,0,0,.6)';
+        x.fillRect(m0, 8, mw, mh);
+        x.strokeStyle = '#ddd';
+        x.lineWidth = 2;
+        ln(P.map(q));
+        x.closePath();
+        x.stroke();
+        z.cs.forEach(c => {
+            const a = q(at(c.s));
+            x.fillStyle = teamColor(c.c);
+            x.beginPath();
+            x.arc(a[0], a[1], c.c === sel ? 4.5 : 3, 0, 6.283);
+            x.fill();
+        });
+    }
+    // ---- standings, overtake log and telemetry panel ----
+    $('lv').innerHTML = ord.map((c, r) => `<tr${c.c === sel ? ' style="font-weight:700"' : ''}><td>${r + 1}</td><td><span style="color:${teamColor(c.c)}">●</span> ${carLabel(c.c)}${c.pit ? ' 🅿' : ''}${c.fin ? ' 🏁' : ''}${c.out ? ' ✖ DNF' : ''}${c.dr ? ' <b style="color:#2e9e4f">DRS</b>' : ''}</td><td>${r && !c.out ? gapText(c, ord[0], L) : '—'}</td><td>${r && !c.out ? gapText(c, ord[r - 1], L) : '—'}</td><td>${Math.round(c.v)}</td><td><b style="color:${TYRES[c.comp].c};text-shadow:0 0 1px #000">${c.comp}</b> ${c.wr}%</td><td>${Math.max(0, c.lp)}</td></tr>`).join('');
+    $('lg').innerHTML = z.log.map(s => '🔁 ' + s).join('<br>');
+    updateBroadcast(ord, L);
+    const c = z.cs.find(q => q.c === sel);
+    if (!c)
+        return;
+    const r = ord.indexOf(c);
+    $('tgp').innerHTML = r ? `<b>P${r + 1}</b> · отставание от ${carLabel(ord[r - 1].c)}: <b>${gapText(c, ord[r - 1], L)} с</b>` : `<b>P1 · лидер</b>${ord[1] ? ` · интервал до ${carLabel(ord[1].c)}: <b>${gapText(ord[1], c, L)} с</b>` : ''}`;
+    const pt2 = z.t - c.pin;
+    $('tpt').innerHTML = c.pit === 1 ? `🅿 Питлейн (лимит 80 км/ч): <b>${pt2.toFixed(2)} с</b>` : c.pit === 2 ? `🛠 Стоянка в боксах: <b>${c.stC.toFixed(2)} с</b> · питлейн ${pt2.toFixed(2)} с` : c.pit === 3 ? `Выезд из боксов · питлейн <b>${pt2.toFixed(2)} с</b>` : `Последний пит-стоп: питлейн <b>${c.pl ? c.pl.toFixed(2) : '—'} с</b> · стоянка <b>${c.stT ? c.stT.toFixed(2) : '—'} с</b>${c.req ? ' · заявка на заезд ✔' : ''}`;
+    $('pitb').className = c.req ? 'on' : '';
+    drawHud(c, z, L);
+    if (state.run && !z.done) updateEngineSound(c);
+    else engineOff();
+    const c3 = [0, 1, 2].map(j => j < c.sec ? c.sc[j] : j == c.sec ? z.t - c.st : 0);
+    $('tsc').innerHTML = `Круг ${Math.max(0, c.lp)}: <b>${c.lp > 0 ? formatTime(z.t - c.ts) : '—'}</b><br>Сейчас: С1 ${formatSector(c3[0])} · С2 ${formatSector(c3[1])} · С3 ${formatSector(c3[2])}<br>Прошлый: С1 ${formatSector(c.ls[0])} · С2 ${formatSector(c.ls[1])} · С3 ${formatSector(c.ls[2])} · круг ${c.last ? formatTime(c.last) : '—'}<br>Лучший круг: ${c.best ? formatTime(c.best) : '—'}`;
+    // ---- speed trace chart ----
+    const sp = $('sp');
+    const sw = sp.width = sp.clientWidth;
+    const sh = sp.height = 100;
+    const y = sp.getContext('2d');
+    const vm = pf.vt * 1.05;
+    y.strokeStyle = fg;
+    y.lineWidth = 2;
+    y.beginPath();
+    for (let k = 0; k < pf.n; k += 2) {
+        const X = pf.D[k] / L * sw;
+        const Y = sh - 4 - pf.u[k] * 3.6 * c.m / vm * (sh - 8);
+        k ? y.lineTo(X, Y) : y.moveTo(X, Y);
+    }
+    y.stroke();
+    y.strokeStyle = '#ffd600';
+    y.beginPath();
+    y.moveTo(sw / 3, 0);
+    y.lineTo(sw / 3, sh);
+    y.moveTo(2 * sw / 3, 0);
+    y.lineTo(2 * sw / 3, sh);
+    y.stroke();
+    const cp = ((c.s % L + L) % L) / L * sw;
+    y.strokeStyle = '#e10600';
+    y.beginPath();
+    y.moveTo(cp, 0);
+    y.lineTo(cp, sh);
+    y.stroke();
+    y.fillStyle = '#e10600';
+    y.beginPath();
+    y.arc(cp, sh - 4 - c.v / vm * (sh - 8), 4, 0, 6.283);
+    y.fill();
+    // retired car: show the reason instead of the pit information
+    const retired = z.cs.find(q => q.c === sel);
+    if (retired && retired.out) $('tpt').textContent = '✖ ' + retired.why;
+}
+
+/**
+ * Race results window with per-car analysis.
+ */
+
+// Classification: finishers by laps and finishing time plus steward penalties, then retired cars by distance covered.
+function classified(z) {
+    const finished = [...z.res].sort((a, b) => (b.lp - a.lp) || ((a.fin + a.pen) - (b.fin + b.pen)));
+    return [...finished, ...[...z.dnf].sort((a, b) => b.s - a.s)];
+}
+
+function showResults() {
+    const z = state.sim;
+    let d = $('rs');
+    if (!d) {
+        d = document.createElement('div');
+        d.id = 'rs';
+        d.style.cssText = 'position:fixed;inset:0;z-index:30;background:var(--bg);color:var(--fg);overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 80px';
+        document.body.appendChild(d);
+    }
+    const rs = classified(z);
+    const w = rs[0];
+    d.innerHTML = `<div style="max-width:860px;margin:0 auto"><div class="row" style="align-items:center"><h2 style="margin:0;flex:4;font-size:18px">🏁 Итоги · ${TRACKS[state.tr][TRACK.NAME]} · ${raceLaps()} кр.</h2><button onclick="$('rs').remove()">✕ Закрыть</button></div>
+<div class="card"><table><tr><th>#</th><th>Болид</th><th>Время / отрыв</th><th>Лучший</th><th>Пит</th><th>Обг.</th></tr>${rs.map((c, i) => `<tr><td>${i + 1}</td><td><span style="color:${teamColor(c.c)}">●</span> ${carLabel(c.c)}</td><td>${c.out ? 'DNF · ' + c.why : (i ? (c.lp < w.lp ? '+' + (w.lp - c.lp) + ' кр.' : '+' + ((c.fin + c.pen) - (w.fin + w.pen)).toFixed(3)) : formatTime(w.fin + w.pen)) + (c.pen ? ' (⚖️ +' + c.pen + ' с)' : '')}</td><td>${c.best ? formatTime(c.best) : '—'}</td><td>${c.ps.length}</td><td>${c.ot}/${c.lost}</td></tr>`).join('')}</table><div class="mu">Обг.: совершено / потеряно позиций</div></div>
+<div class="card"><h3>Анализ болида</h3><select id="ra" style="width:100%" onchange="showCarAnalysis(+this.value)">${optionsHtml(rs.map(c => carLabel(c.c)), 0)}</select><div id="rb2"></div></div></div>`;
+    showCarAnalysis(0);
+}
+
+function showCarAnalysis(i) {
+    const z = state.sim;
+    const c = classified(z)[i];
+    const w = z.res[0] || c;
+    const tr = TRACKS[state.tr];
+    const hl = c.hl;
+    const fg = getComputedStyle(document.body).color;
+    const srt = [...hl].sort((a, b) => a - b);
+    const med = srt[srt.length >> 1] || 1;
+    const mean = a => a.length ? a.reduce((p, q) => p + q, 0) / a.length : 0;
+    const cln = a => {
+        const m = [...a].sort((x, y) => x - y)[a.length >> 1] || 1;
+        return a.filter((t, j) => j > 0 && t < m * 1.03);
+    };
+    const cc = cln(hl);
+    const k3 = Math.max(1, Math.floor(cc.length / 3));
+    const dg = mean(cc.slice(-k3)) - mean(cc.slice(0, k3));
+    const g = c.c.grid + 1;
+    const pos = i + 1;
+    const bi = hl.indexOf(Math.min(...hl)) + 1;
+    const av = (c.fin ? (c.lp - 1) * tr[TRACK.LENGTH_KM] : c.s / 1000) / (c.fin || c.outT) * 3600;
+    const ins = [`Старт P${g} → финиш P${pos}: ${pos < g ? '+' + (g - pos) + ' мест' : pos > g ? '−' + (pos - g) + ' мест' : 'без изменений'}; обгонов совершено ${c.ot}, позиций потеряно ${c.lost}.`,
+        `Темп: лучший круг ${formatTime(c.best)} (круг ${bi}); ${i ? 'в среднем ' + (mean(cc) - mean(cln(w.hl))).toFixed(2) + ' с/кр. к лидеру.' : 'лучший средний темп среди финишировавших.'}`,
+        `Шины: к концу стинтов темп меняется на ${dg > 0 ? '+' : ''}${dg.toFixed(2)} с/кр.; ${c.ps.length ? c.ps.map((p, j) => `стоп ${j + 1} на круге ${p.lap - 1} (износ ${p.w}%, далее ${TYRES[p.comp].n})`).join('; ') : 'пит-стопов не было'}.`,
+        `Режим: полный газ ${(c.tf / c.tt * 100).toFixed(0)}% времени, торможение ${(c.tb / c.tt * 100).toFixed(0)}%, DRS ${c.td.toFixed(0)} с, макс. скорость ${Math.round(c.vx)} км/ч, средняя ${av.toFixed(0)} км/ч.`,
+        c.c.s == 'f1' ? `ERS: потрачено ${c.eu.toFixed(0)}% заряда, рекуперировано ${c.eh.toFixed(0)}%, в конце ${Math.round(c.er)}%.` : 'У F2 нет ERS.'];
+    if (state.human) {
+        const p = c.c.pil;
+        ins.push(`Реалистичная езда: ошибок ${c.errN}, потери ≈ ${c.errT.toFixed(1)} с; разброс темпа ±${c.sd.toFixed(2)} с.`);
+        ins.push(`Пилот: RTG ${pilotRating(p)} (EXP ${p.exp} · RAC ${p.rac} · AWA ${p.awa} · PAC ${p.pac})${c.pen ? '; штрафы стюардов +' + c.pen + ' с' : ''}.`);
+    }
+    if (c.out) ins.unshift(`✖ Сход на круге ${Math.max(1, c.lp)}: ${c.why}.`);
+    $('rb2').innerHTML = `<ul style="padding-left:18px;margin:8px 0">${ins.map(t => '<li>' + t + '</li>').join('')}</ul><div class="mu">Время круга (пики пит-стопов обрезаны), фон — шины</div><canvas id="rc1" style="height:150px"></canvas><div class="mu">Позиция по кругам</div><canvas id="rc2" style="height:120px"></canvas>${c.ps.length ? `<table><tr><th>Стоп</th><th>Круг</th><th>Питлейн</th><th>Стоянка</th><th>Шины</th></tr>${c.ps.map((p, j) => `<tr><td>${j + 1}</td><td>${p.lap - 1}</td><td>${p.pl.toFixed(2)} с</td><td>${p.st.toFixed(2)} с</td><td>${TYRES[p.comp].n}</td></tr>`).join('')}</table>` : ''}`;
+    const n = Math.max(1, hl.length);
+    const a = $('rc1');
+    const W = a.width = a.clientWidth;
+    const H = a.height = 150;
+    const x = a.getContext('2d');
+    const mn = Math.min(...hl);
+    const mx = Math.max(mn + 1, med * 1.03);
+    hl.forEach((t, j) => {
+        x.globalAlpha = .3;
+        x.fillStyle = TYRES[c.hc[j] || 'M'].c;
+        x.fillRect(j / n * W, 0, W / n, H);
+    });
+    x.globalAlpha = 1;
+    x.strokeStyle = fg;
+    x.lineWidth = 2;
+    x.beginPath();
+    hl.forEach((t, j) => {
+        const X = (j + .5) / n * W;
+        const Y = H - 8 - (Math.min(t, mx) - mn) / (mx - mn) * (H - 16);
+        j ? x.lineTo(X, Y) : x.moveTo(X, Y);
+    });
+    x.stroke();
+    const b = $('rc2');
+    const y = b.getContext('2d');
+    const W2 = b.width = b.clientWidth;
+    const H2 = b.height = 120;
+    const nc = Math.max(2, z.cs.length);
+    y.strokeStyle = '#e10600';
+    y.lineWidth = 2;
+    y.beginPath();
+    c.hp.forEach((p, j) => {
+        const X = (j + .5) / n * W2;
+        const Y = 8 + (p - 1) / (nc - 1) * (H2 - 16);
+        j ? y.lineTo(X, Y) : y.moveTo(X, Y);
+    });
+    y.stroke();
+    y.fillStyle = fg;
+    y.font = '10px system-ui';
+    y.fillText('P1', 2, 10);
+    y.fillText('P' + nc, 2, H2 - 2);
+}
+
+/**
+ * UI helpers and tab switching.
+ */
+
+const trackInfoText = i => {
+    const track = TRACKS[i];
+    return `${track[TRACK.LENGTH_KM]} км · ${track[TRACK.CORNERS]} поворотов · DRS: ${track[TRACK.DRS_ZONES]} · полный газ ${track[TRACK.FULL_THROTTLE]}% · прижим ${track[TRACK.DOWNFORCE]}/5 · износ шин ${track[TRACK.TYRE_WEAR]} (${track[TRACK.TYRE_WEAR] < .85 ? 'низкий' : track[TRACK.TYRE_WEAR] < 1.15 ? 'средний' : 'высокий'}) · шины C${TYRE_ALLOCATION[i][0]}/C${TYRE_ALLOCATION[i][1]}/C${TYRE_ALLOCATION[i][2]} · обгоны ${track[TRACK.OVERTAKING]}/5`;
+};
+
+const renderNoCar = () => $('m').innerHTML = '<div class="card">Добавьте болид во вкладке «Болид».</div>';
+
+const sliderHtml = (l, k, v, a, b, s, fn, dis) => `<label class="sl"><span>${l}</span><b>${v}</b><input type="range" data-k="${k}" min="${a}" max="${b}" step="${s}" value="${v}"${dis ? ' disabled' : ''} oninput="${fn}(this)"></label>`;
+
+const optionsHtml = (a, sel) => a.map((x, i) => `<option value="${i}"${i == sel ? ' selected' : ''}>${x}</option>`).join('');
+
+// ---------- Общее ----------
+const TAB_RENDERERS = [renderCarTab, renderStrategyTab, renderTestTab];
+
+function render() {
+    applyTyreAllocation();
+    document.body.classList.toggle('wide', state.tab === 2);   // race tab uses the full width
+    $('ti').textContent = TRACKS[state.tr][TRACK.NAME] + ': ' + trackInfoText(state.tr);
+    $('eqb').textContent = 'Мощность болидов: ' + (state.eq ? 'равная' : 'реальная');
+    $('eqb').className = state.eq ? 'on' : '';
+    $('chips').innerHTML = state.cars.map((c, i) => `<button class="chip${i == state.a ? ' on' : ''}" onclick="state.a=${i};render()"><i style="background:${teamColor(c)}"></i>${carLabel(c)}</button>`).join('');
+    TAB_RENDERERS[state.tab]();
+}
+
+function switchTab(n) {
+    state.run = false;
+    engineOff();
+    state.tab = n;
+    document.querySelectorAll('nav button').forEach((b, i) => b.className = i == n ? 'on' : '');
+    render();
+}
+
+/**
+ * Sound, synthesised with the Web Audio API (no sound files).
+ *   - the engine note of the selected car while the race runs (pitch from speed and gear, loudness from the throttle)
+ *   - short cues for overtakes, pit stops, crashes, failures and the finish
+ * state.volume (0-100, settings menu) is the master volume. Browsers start audio only after a click or tap,
+ * so initAudio() is called from the first pointer event (see main.js).
+ */
+const sound = { ctx: null, master: null, filter: null, engine: null, osc: [] };
+
+// Speed ranges of the gears in km/h; the engine revs up inside a gear and drops at the shift.
+const GEAR_LIMITS = {
+    f1: [0, 70, 105, 145, 185, 225, 265, 300, 345],
+    f2: [0, 60, 100, 150, 200, 250, 310],
+};
+
+const volumeGain = () => Math.pow(state.volume / 100, 2) * .9;
+
+function applyVolume() {
+    if (sound.master) sound.master.gain.setTargetAtTime(volumeGain(), sound.ctx.currentTime, .03);
+}
+
+function initAudio() {
+    if (sound.ctx) {
+        if (sound.ctx.state === 'suspended') sound.ctx.resume();
+        return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = sound.ctx = new AC();
+    sound.master = ctx.createGain();
+    sound.master.connect(ctx.destination);
+    sound.filter = ctx.createBiquadFilter();
+    sound.filter.type = 'lowpass';
+    sound.engine = ctx.createGain();
+    sound.engine.gain.value = 0;
+    sound.filter.connect(sound.engine);
+    sound.engine.connect(sound.master);
+    // two slightly detuned saw waves and a square wave an octave up: a rough turbo V6 buzz
+    sound.osc = [['sawtooth', 1, .5], ['sawtooth', 1.006, .4], ['square', 2, .12]].map(([type, ratio, level]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type;
+        o.frequency.value = 200;
+        g.gain.value = level;
+        o.connect(g);
+        g.connect(sound.filter);
+        o.start();
+        return { o, ratio };
+    });
+    applyVolume();
+}
+
+// c = simulated car (state.sim.cs[i]) that the player follows
+function updateEngineSound(c) {
+    if (!sound.ctx) return;
+    if (c.out || state.volume == 0) return engineOff();
+    const lim = GEAR_LIMITS[c.c.s == 'f1' ? 'f1' : 'f2'];
+    const g = clamp(c.gr, 1, lim.length - 1);
+    const ratio = clamp((c.v - lim[g - 1]) / (lim[g] - lim[g - 1]), 0, 1);
+    const idle = c.v < 5;
+    const rpm = idle ? 3800 : c.c.s == 'f1' ? 6500 + ratio * 6500 : 5500 + ratio * 4000;
+    const f = rpm / 60 * 3 * .6;                 // a V6 fires three times per revolution; scaled down to a pleasant pitch
+    const t = sound.ctx.currentTime;
+    sound.osc.forEach(({ o, ratio }) => o.frequency.setTargetAtTime(f * ratio, t, .05));
+    sound.filter.frequency.setTargetAtTime(500 + c.th * 22 + ratio * 300, t, .08);
+    sound.engine.gain.setTargetAtTime(idle ? .05 : .08 + .18 * c.th / 100, t, .08);
+}
+
+function engineOff() {
+    if (sound.engine) sound.engine.gain.setTargetAtTime(0, sound.ctx.currentTime, .1);
+}
+
+function tone(freq, dur, type = 'sine', level = .3, delay = 0) {
+    const ctx = sound.ctx, t = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(level, t + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g);
+    g.connect(sound.master);
+    o.start(t);
+    o.stop(t + dur + .02);
+}
+
+function noise(dur, level) {
+    const ctx = sound.ctx, n = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    f.type = 'lowpass';
+    f.frequency.value = 1200;
+    g.gain.value = level;
+    src.buffer = buf;
+    src.connect(f);
+    f.connect(g);
+    g.connect(sound.master);
+    src.start();
+}
+
+// Race event cues. car = garage car the event is about; most cues play only for the selected car.
+function playEvent(kind, car) {
+    if (!sound.ctx || state.volume == 0) return;
+    const own = !car || car === currentCar();
+    if (kind === 'overtake' && own) {
+        tone(660, .12, 'triangle');
+        tone(880, .2, 'triangle', .3, .1);
+    }
+    else if (kind === 'lost' && own) {
+        tone(330, .15, 'sawtooth', .18);
+        tone(247, .22, 'sawtooth', .18, .12);
+    }
+    else if (kind === 'pit' && own) {
+        tone(520, .08, 'square', .12);
+        tone(520, .08, 'square', .12, .14);
+    }
+    else if (kind === 'crash') noise(.7, own ? .6 : .25);
+    else if (kind === 'fail' && own) tone(220, .6, 'sawtooth', .25);
+    else if (kind === 'finish' && own) [523, 659, 784, 1047].forEach((f, i) => tone(f, .5, 'triangle', .25, i * .12));
+    else if (kind === 'preview') tone(440, .1, 'triangle', .3);
+}
+
+/**
+ * Settings menu: theme, language and volume. The values are kept in localStorage, so they survive a reload.
+ * (Theme: setTheme() in main.js, language: setLang() in i18n.js, sound: audio.js.)
+ */
+const SETTINGS_KEY = 'f1-engineer-settings';
+
+function loadSettings() {
+    try {
+        return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveSettings() {
+    try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme: state.theme, lang: state.lang, volume: state.volume }));
+    } catch (e) { /* storage blocked: settings last until the page is closed */ }
+}
+
+function openSettings() {
+    $('set').classList.add('open');
+}
+
+function closeSettings() {
+    $('set').classList.remove('open');
+}
+
+function setVolume(v) {
+    state.volume = v;
+    $('svol').value = v;
+    $('svv').textContent = v;
+    applyVolume();
+    saveSettings();
+}
+
+// Slider moved by the user: also wakes up the audio engine (browsers need a user gesture for that).
+function onVolumeInput(v) {
+    setVolume(v);
+    initAudio();
+}
+
+/**
+ * Russian -> English translation. The UI is written in Russian; in English mode every text node is translated
+ * through EN_DICTIONARY (longest phrase first). Add new UI texts to js/data/dictionary.js.
+ */
+
+// Longest phrases first so that long sentences win over the words inside them.
+const EN_DICTIONARY = DICTIONARY_PAIRS.slice().sort((a, b) => b[0].length - a[0].length);
+
+// Cache of already translated strings.
+const translationCache = new Map();
+
+function translate(d) {
+    let r = translationCache.get(d);
+    if (r != null)
+        return r;
+    r = d;
+    for (const [a, b] of EN_DICTIONARY)
+        if (r.includes(a))
+            r = r.split(a).join(b);
+    r = r.replace(/(\d+)\s*кр\.:/g, 'Lap $1:').replace(/(\d)\s*кр\./g, '$1 laps').replace(/(\d|\)|—)\s*с(?![А-Яа-яЁё])/g, '$1 s').replace(/(\d)\s*кг/g, '$1 kg');
+    if (translationCache.size > 3000)
+        translationCache.clear();
+    translationCache.set(d, r);
+    return r;
+}
+
+function translateTextNode(n) {
+    if (state.lang !== 'en')
+        return;
+    const d = n.data;
+    if (!/[А-Яа-яЁё]/.test(d))
+        return;
+    if (n.__ru == null)
+        n.__ru = d;
+    const e = translate(n.__ru === d ? d : d);
+    if (e !== d)
+        n.data = e;
+}
+
+function translateTree(r) {
+    if (state.lang !== 'en')
+        return;
+    if (r.nodeType === 3)
+        return translateTextNode(r);
+    const w = document.createTreeWalker(r, 4);
+    let n;
+    while (n = w.nextNode())
+        translateTextNode(n);
+}
+
+new MutationObserver(m => {
+    if (state.lang !== 'en')
+        return;
+    for (const x of m) {
+        if (x.type === 'characterData')
+            translateTextNode(x.target);
+        else
+            x.addedNodes.forEach(translateTree);
+    }
+}).observe(document.body, { childList: true, subtree: true, characterData: true });
+
+function setLang(l) {
+    state.lang = l;
+    document.documentElement.lang = l;
+    $('sl').value = l;
+    $('slng').value = l;
+    if (l == 'en') {
+        translateTree(document.body);
+        document.title = 'F1 2020 — Race Engineer';
+    }
+    else {
+        const w = document.createTreeWalker(document.body, 4);
+        let n;
+        while (n = w.nextNode())
+            if (n.__ru != null)
+                n.data = n.__ru;
+        document.title = 'F1 2020 — Инженер-стратег';
+    }
+    saveSettings();
+    if (state.cars.length)
+        render();
+}
+
+/**
+ * Start-up code: theme, start screen and initial state. Loaded last.
+ */
+
+applyTyreAllocation();
+
+$('trk').innerHTML = optionsHtml(TRACKS.map(track => track[TRACK.NAME]), 0);
+
+function setTheme(v) {
+    const r = document.documentElement;
+    if (v == 'sys')
+        r.removeAttribute('data-theme');
+    else
+        r.setAttribute('data-theme', v == 'white' ? 'light' : 'dark');
+    state.theme = v;
+    $('sth').value = v;
+    $('sthm').value = v;
+    saveSettings();
+    if (state.sim && state.tab == 2)
+        drawRace();
+}
+
+function startApp() {
+    document.body.classList.remove('st');
+    $('st').style.display = 'none';
+    render();
+}
+
+state.lang = 'ru';
+
+// Restore the saved settings; without them the browser language decides.
+const saved = loadSettings();
+setVolume(saved.volume != null ? saved.volume : state.volume);
+setTheme(saved.theme || 'sys');
+const startLang = saved.lang || ((navigator.language || 'ru').toLowerCase().startsWith('ru') ? 'ru' : 'en');
+if (startLang == 'en') setLang('en');
+
+// Browsers allow sound only after a click or tap.
+document.addEventListener('pointerdown', initAudio, { passive: true });
+
+state.cars.push(makeCar('f1', 0), makeCar('f1', 9));
+
+state.cars.forEach((c, i) => c.grid = i);
+
+switchTab(0);
+</script>
+</body>
+</html>

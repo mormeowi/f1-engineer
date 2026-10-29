@@ -1,0 +1,659 @@
+/* F1 2020 Race Engineer - styles. Colours are CSS variables on :root; the dark theme redefines them. */
+
+:root {
+  --bg:#f2f3f6;
+  --fg:#14161b;
+  --cd:#fff;
+  --mu:#6b7280;
+  --ln:#dfe2e8;
+  --ac:#e10600;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+
+@media (prefers-color-scheme:dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0e1014;
+    --fg:#eceef2;
+    --cd:#181b22;
+    --mu:#9aa1ad;
+    --ln:#2a2e38;
+    color-scheme:dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:#0e1014;
+  --fg:#eceef2;
+  --cd:#181b22;
+  --mu:#9aa1ad;
+  --ln:#2a2e38;
+  color-scheme:dark;
+}
+
+html {
+  scroll-padding-top:env(safe-area-inset-top,0px);
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-bottom:70px;
+}
+
+body::before {
+  content:"";
+  position:fixed;
+  inset:0 0 auto;
+  height:env(safe-area-inset-top,0px);
+  background:var(--cd);
+  z-index:10;
+}
+
+header {
+  position:sticky;
+  top:env(safe-area-inset-top,0px);
+  background:var(--cd);
+  border-bottom:2px solid var(--ac);
+  padding:8px 12px;
+  z-index:9;
+}
+
+h1 {
+  font-size:17px;
+  margin:0 0 6px;
+}
+
+h3 {
+  margin:0 0 8px;
+  font-size:15px;
+}
+
+main,#chips {
+  max-width:860px;
+  margin:0 auto;
+  padding:10px 12px;
+}
+
+#chips {
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:0;
+}
+
+.row {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.row>* {
+  flex:1;
+}
+
+select,button {
+  font:inherit;
+  color:var(--fg);
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:10px;
+  padding:8px 10px;
+  min-height:38px;
+}
+
+button {
+  cursor:pointer;
+}
+
+button.on,.chip.on {
+  background:var(--ac);
+  color:#fff;
+  border-color:var(--ac);
+}
+
+button.pr {
+  background:var(--ac);
+  color:#fff;
+  border-color:var(--ac);
+  font-weight:600;
+}
+
+.chip {
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex:none;
+  padding:6px 10px;
+  min-height:34px;
+}
+
+.chip i {
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+
+.card {
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+.seg {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.seg>button {
+  flex:1;
+  padding:6px;
+}
+
+.sl {
+  display:grid;
+  grid-template-columns:1fr auto;
+  margin:6px 0;
+  font-size:13px;
+}
+
+.sl input {
+  grid-column:1/3;
+  width:100%;
+  accent-color:var(--ac);
+}
+
+.sl b {
+  font-variant-numeric:tabular-nums;
+}
+
+.g {
+  color:var(--mu);
+  font-size:12px;
+  text-transform:uppercase;
+  margin:12px 0 2px;
+  letter-spacing:.05em;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+
+td,th {
+  padding:5px 3px;
+  border-bottom:1px solid var(--ln);
+  text-align:left;
+}
+
+canvas {
+  width:100%;
+  display:block;
+  border-radius:10px;
+  background:var(--bg);
+}
+
+.mu {
+  color:var(--mu);
+  font-size:13px;
+}
+
+.bad {
+  color:var(--ac);
+  font-weight:600;
+}
+
+nav {
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  display:flex;
+  background:var(--cd);
+  border-top:1px solid var(--ln);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:9;
+}
+
+nav button {
+  flex:1;
+  border:0;
+  border-radius:0;
+  min-height:52px;
+  background:none;
+}
+
+nav button.on {
+  background:none;
+  color:var(--ac);
+  font-weight:700;
+  border-top:3px solid var(--ac);
+}
+
+.big {
+  font-size:26px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+
+.bar {
+  height:12px;
+  background:var(--ln);
+  border-radius:6px;
+  overflow:hidden;
+  margin-bottom:4px;
+}
+
+.bar i {
+  display:block;
+  height:100%;
+  width:0;
+}
+
+#st {
+  position:fixed;
+  inset:0;
+  z-index:50;
+  background:radial-gradient(circle at 50% 30%,var(--cd),var(--bg));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:24px;
+}
+
+#st h1 {
+  font-size:34px;
+  margin:6px 0 2px;
+}
+
+#st .sub {
+  color:var(--mu);
+  margin-bottom:28px;
+}
+
+#st .go {
+  font-size:20px;
+  padding:14px 56px;
+  border-radius:14px;
+}
+
+#st .lang {
+  margin-top:22px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--mu);
+}
+
+#wm {
+  position:fixed;
+  right:8px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 58px);
+  z-index:60;
+  font-size:11px;
+  color:var(--mu);
+  pointer-events:none;
+  background:var(--cd);
+  border:1px solid var(--ln);
+  border-radius:8px;
+  padding:3px 8px;
+  opacity:.92;
+}
+
+#wm a {
+  color:var(--ac);
+  pointer-events:auto;
+  text-decoration:none;
+  font-weight:600;
+}
+
+body.st #wm {
+  bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+}
+
+.spotify {
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  margin-top:16px;
+  padding:11px 26px;
+  border-radius:500px;
+  background:#1db954;
+  color:#000;
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:.2px;
+  text-decoration:none;
+  box-shadow:0 4px 14px rgba(29,185,84,.35);
+  transition:transform .12s,background .12s;
+}
+
+.spotify:hover {
+  background:#1ed760;
+  transform:scale(1.04);
+}
+
+.spotify:active {
+  transform:scale(.98);
+}
+
+.spotify svg {
+  width:22px;
+  height:22px;
+  flex:none;
+}
+
+/* ---- Race tab: wide layout, broadcast frame, timing tower ---- */
+#ti {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 6px 12px 0;
+}
+
+body.wide main,
+body.wide #chips,
+body.wide #ti {
+  max-width: 1500px;
+}
+
+input[type=text] {
+  font: inherit;
+  color: var(--fg);
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-height: 38px;
+  width: 100%;
+}
+
+.stage {
+  position: relative;
+  margin: 0 -12px 10px;
+  background: #0b0d12;
+  border-top: 3px solid #e10600;
+  overflow: hidden;
+}
+
+@media (min-width: 760px) {
+  .stage {
+    margin: 0 0 10px;
+    border: 2px solid #1c2028;
+    border-top: 3px solid #e10600;
+    border-radius: 14px;
+  }
+}
+
+.bcast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  background: linear-gradient(90deg, #14171e, #0b0d12);
+  color: #fff;
+  font: 700 13px/1 system-ui, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.bcast .live b {
+  background: #e10600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.stage canvas {
+  border-radius: 0;
+  background: #0b0d12;
+}
+
+.tower {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 140px;
+  color: #fff;
+  font: 600 11px/1 system-ui, sans-serif;
+  background: rgba(11, 13, 18, .82);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tw-h {
+  padding: 5px 8px;
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: #9aa1ad;
+  background: rgba(255, 255, 255, .06);
+  cursor: pointer;
+}
+
+.tw-r {
+  display: grid;
+  grid-template-columns: 16px 4px 1fr auto 12px;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.tw-r.sel {
+  background: rgba(225, 6, 0, .55);
+}
+
+.tw-r i {
+  display: block;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.tw-r b {
+  text-align: right;
+}
+
+.tw-r em {
+  font-style: normal;
+  color: #e8e8e8;
+  font-variant-numeric: tabular-nums;
+}
+
+.tw-r u {
+  text-decoration: none;
+  font-size: 10px;
+}
+
+/* ---- Race tab: compact controls inside the frame, status HUD on the map ---- */
+.view {
+  position: relative;
+}
+
+.hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100px;
+  pointer-events: none;
+  background: transparent !important;
+}
+
+.tools {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: #0b0d12;
+}
+
+/* all buttons share the width, so nothing needs scrolling on a phone */
+.tools button {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 90px;
+  min-height: 34px;
+  padding: 4px 2px;
+  font-size: 15px;
+  white-space: nowrap;
+  color: #fff;
+  background: #1b1f27;
+  border: 1px solid #2a2f3a;
+}
+
+.tools button.on,
+.tools button.pr {
+  background: #e10600;
+  border-color: #e10600;
+}
+
+/* less chrome above the map on the race tab */
+body.wide header {
+  position: static;
+  padding: 6px 12px;
+}
+
+body.wide header h1,
+body.wide #ti,
+body.wide #eqb {
+  display: none;
+}
+
+body.wide header select,
+body.wide header button {
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+/* ---- Pilot card ---- */
+.pilot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 12px;
+}
+
+.rtg {
+  flex: none;
+  width: 58px;
+  padding: 6px 0;
+  text-align: center;
+  color: #fff;
+  background: #e10600;
+  border-radius: 10px;
+}
+
+.rtg b {
+  display: block;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.rtg small {
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+
+.pst {
+  flex: 1;
+}
+
+.pst label {
+  display: grid;
+  grid-template-columns: 34px 1fr 26px;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pst input {
+  height: 18px;
+  margin: 0;
+  accent-color: var(--ac);
+}
+
+.pst b {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Settings menu ---- */
+.gear {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 12px;
+  padding: 6px 12px;
+  font-size: 20px;
+  border-radius: 12px;
+}
+
+#set {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .5);
+}
+
+#set.open {
+  display: flex;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 380px;
+  padding: 14px 16px;
+  color: var(--fg);
+  background: var(--cd);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+}
+
+.sh-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.srow {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.srow select {
+  grid-column: 2 / 4;
+}
+
+.srow input[type=range] {
+  accent-color: var(--ac);
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>F1 2020 — Инженер-стратег</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="st">
+
+<!-- Top bar: track, power mode, theme, language -->
+<header>
+    <h1>🏎️ F1 2020 · Инженер-стратег</h1>
+    <div class="row">
+        <select id="trk" onchange="state.tr=+this.value;render()"></select>
+        <button id="eqb" onclick="state.eq=!state.eq;render()"></button>
+        <button id="setb" onclick="openSettings()" style="flex:0 0 auto">⚙️</button>
+    </div>
+</header>
+
+<!-- Car chips, track facts and the active tab are rendered into these three containers -->
+<div id="chips"></div>
+<div id="ti" class="mu"></div>
+<main id="m"></main>
+
+<nav>
+    <button onclick="switchTab(0)">🔧 Болид</button>
+    <button onclick="switchTab(1)">📊 Стратегия</button>
+    <button onclick="switchTab(2)">⏱️ Тест</button>
+</nav>
+
+<!-- Start screen -->
+<div id="st">
+    <div style="font-size:64px">🏎️</div>
+    <h1>F1 2020</h1>
+    <div class="sub">Инженер-стратег</div>
+    <button class="gear" onclick="openSettings()">⚙️</button>
+    <button class="pr go" onclick="startApp()">Начать</button>
+    <a class="spotify" href="https://open.spotify.com/playlist/6NShZO3L4vNwC0VX8GzDp1?si=9W0B8rEhSrSBn7LOVs0Uhw&amp;utm_source=copy-link&amp;pi=WIhhPJ_0SsCqB" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="12" fill="#000"/>
+            <path d="M5.5 9c4.5-1.3 9-.9 13 1.4M6.5 12.6c3.6-1 7-.7 10 1.1M7.6 15.8c2.7-.7 5.2-.5 7.4.8" stroke="#1db954" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span>Мой гоночный плейлист</span>
+    </a>
+    <div class="lang"><span>Язык</span>
+        <select id="sl" onchange="setLang(this.value)">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+    <div class="lang"><span>Тема</span>
+        <select id="sth" onchange="setTheme(this.value)">
+            <option value="sys">Как в системе</option>
+            <option value="white">Белая</option>
+            <option value="black">Чёрная</option>
+        </select>
+    </div>
+</div>
+
+<!-- Settings menu -->
+<div id="set" onclick="if (event.target === this) closeSettings()">
+    <div class="sheet">
+        <div class="sh-h"><b>⚙️ Настройки</b><button onclick="closeSettings()">✕</button></div>
+        <label class="srow"><span>Тема</span>
+            <select id="sthm" onchange="setTheme(this.value)">
+                <option value="sys">Как в системе</option>
+                <option value="white">Белая</option>
+                <option value="black">Чёрная</option>
+            </select>
+        </label>
+        <label class="srow"><span>Язык</span>
+            <select id="slng" onchange="setLang(this.value)">
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+            </select>
+        </label>
+        <label class="srow"><span>Громкость</span>
+            <input type="range" id="svol" min="0" max="100" value="60" oninput="onVolumeInput(+this.value)" onchange="playEvent('preview')">
+            <b id="svv">60</b>
+        </label>
+        <div class="mu">Звук: двигатель выбранного болида и сигналы событий гонки (обгон, пит-стоп, авария, финиш).</div>
+    </div>
+</div>
+
+<div id="wm">Made with Claude · by mormeowi · <a href="https://github.com/mormeowi" target="_blank" rel="noopener">GitHub: mormeowi</a></div>
+
+<!-- Scripts: plain scripts (no modules) so the page also works when opened from disk. Order matters. -->
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/data/tracks.js"></script>
+<script src="js/data/track-geometry.js"></script>
+<script src="js/data/series.js"></script>
+<script src="js/data/setup-params.js"></script>
+<script src="js/data/tyres.js"></script>
+<script src="js/data/weather.js"></script>
+<script src="js/data/environment.js"></script>
+<script src="js/data/dictionary.js"></script>
+<script src="js/model/pilot.js"></script>
+<script src="js/model/cars.js"></script>
+<script src="js/model/weather.js"></script>
+<script src="js/model/lap-model.js"></script>
+<script src="js/track.js"></script>
+<script src="js/simulation.js"></script>
+<script src="js/ui/pilot-card.js"></script>
+<script src="js/ui/presets.js"></script>
+<script src="js/ui/weather-ui.js"></script>
+<script src="js/ui/environment.js"></script>
+<script src="js/ui/car-tab.js"></script>
+<script src="js/ui/strategy-tab.js"></script>
+<script src="js/ui/test-tab.js"></script>
+<script src="js/ui/results.js"></script>
+<script src="js/ui/common.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
