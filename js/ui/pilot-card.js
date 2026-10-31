@@ -1,6 +1,6 @@
 /**
  * Compact pilot card: overall rating (RTG) on the left, four editable ratings on the right.
- * scope 'car' edits the selected car, scope 'new' is the card in the "add a car" window.
+ * Only used in the Pilots tab (scope 'draft'): the sliders edit the pilot that is being created.
  */
 const PILOT_NOTE = 'EXP — опыт · RAC — гоночное мастерство · AWA — осознанность · PAC — скорость · RTG — общий рейтинг (считается сам). Значения 1–99, действуют при включённой реалистичной езде.';
 
@@ -16,5 +16,8 @@ function onPilotInput(e) {
     e.nextElementSibling.textContent = e.value;
     const p = readPilotCard(card);
     card.querySelector('.rtg b').textContent = pilotRating(p);
-    if (card.dataset.scope === 'car') currentCar().pil = p;
+    if (card.dataset.scope === 'draft') {
+        draft().pil = p;
+        updateDraftPreview();
+    }
 }

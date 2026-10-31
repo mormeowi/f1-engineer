@@ -664,6 +664,56 @@ body.wide header button {
 .srow input[type=range] {
   accent-color: var(--ac);
 }
+
+/* ---- Pilots tab ---- */
+.tchip {
+  display: inline-block;
+  margin: 3px 3px 0 0;
+  padding: 2px 8px;
+  font-size: 11px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 999px;
+}
+
+.trait {
+  margin: 6px 0;
+  padding: 6px 10px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.trait ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.prow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
+.pbtn {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.pbtn button {
+  padding: 4px 8px;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+nav button {
+  font-size: 13px;
+}
 </style>
 </head>
 <body class="st">
@@ -687,6 +737,7 @@ body.wide header button {
     <button onclick="switchTab(0)">🔧 Болид</button>
     <button onclick="switchTab(1)">📊 Стратегия</button>
     <button onclick="switchTab(2)">⏱️ Тест</button>
+    <button onclick="switchTab(3)">👤 Пилоты</button>
 </nav>
 
 <!-- Start screen -->
@@ -797,6 +848,7 @@ const formatGapTime = d => d < 10 ? d.toFixed(3) : d < 60 ? d.toFixed(1) : Math.
  *   cam    true = camera follows the selected car, false = whole track
  *   z      camera zoom factor
  *   lang   'ru' or 'en'
+ *   draft  pilot being edited in the Pilots tab
  *   weather 'dry' | 'damp' | 'rain' (model/weather.js)
  *   theme  'sys' | 'white' | 'black'
  *   volume master volume 0-100 (settings menu)
@@ -1479,7 +1531,137 @@ const DICTIONARY_PAIRS = [
     ["разреженный воздух, мало сцепления и прижима", "thin air, little grip and downforce"],
     ["ручей пересекает трассу, погода меняется", "a stream crosses the track, the weather changes"],
     ["дождь редкость, песок на гладком покрытии", "rain is rare, sand on a smooth surface"],
+    ["Создание пилота", "Create a pilot"],
+    ["Имя пилота", "Pilot name"],
+    ["Черты (до 3)", "Traits (up to 3)"],
+    ["— пусто —", "— empty —"],
+    ["Сохранить пилота", "Save pilot"],
+    ["Новый пилот", "New pilot"],
+    ["Мои пилоты", "My pilots"],
+    ["Пилоты", "Pilots"],
+    ["Пока нет сохранённых пилотов.", "No saved pilots yet."],
+    ["Пилот сохранён:", "Pilot saved:"],
+    ["Пилот удалён:", "Pilot deleted:"],
+    ["посажен в болид", "seated in car"],
+    ["В болид", "To car"],
+    ["Стандартный пилот (70)", "Default pilot (70)"],
+    ["Посадить пилота", "Seat the pilot"],
+    ["Пилотов создают во вкладке «Пилоты».", "Pilots are created in the “Pilots” tab."],
+    ["Эффективные значения с чертами:", "Effective ratings with traits:"],
+    ["Нет черт", "No traits"],
+    ["Нет болидов — сначала добавьте болид во вкладке «Болид».", "No cars yet: add one in the “Car” tab first."],
+    ["Черты:", "Traits:"],
+    ["Пилот", "Pilot"],
 ];
+
+/**
+ * Pilot traits. A pilot can carry up to MAX_TRAITS of them; they work while "realistic driving" is on.
+ * The numbers in the texts are the ones used in model/traits.js and simulation.js - change them together.
+ *   name / desc / effects   texts of the Russian interface
+ *   en                      the English twin of the same texts (added to the translation dictionary below)
+ */
+const MAX_TRAITS = 3;
+
+const TRAITS = {
+    adaptive: {
+        name: 'Адаптивность',
+        desc: 'Выступает стабильно при любых погодных условиях: в дождь и на сырой трассе штрафы к пилотированию меньше.',
+        effects: [
+            'Сыро и дождь: возвращает 3% потери темпа из-за погоды (около 0,15–0,4 с/круг)',
+            'Сыро и дождь: ошибок и контактов на 20% меньше',
+            'Разброс темпа на 15% меньше в любую погоду',
+            'Минус: в сухую на 0,05 с/круг медленнее',
+        ],
+        en: {
+            name: 'Adaptability',
+            desc: 'Performs steadily in any weather: in rain and on a damp track the driving penalties are smaller.',
+            effects: [
+                'Damp and rain: wins back 3% of the pace lost to the weather (about 0.15-0.4 s/lap)',
+                'Damp and rain: 20% fewer mistakes and contacts',
+                'Pace scatter is 15% smaller in any weather',
+                'Downside: 0.05 s/lap slower in the dry',
+            ],
+        },
+    },
+    rainMaster: {
+        name: 'Мастер дождя',
+        desc: 'Пилотирует лучше в дождь, чем в сухую погоду.',
+        effects: [
+            'Дождь: возвращает 4% потери темпа из-за погоды и ещё 0,1 с/круг (на сырой трассе вдвое меньше)',
+            'Дождь: ошибок и контактов на 30% меньше (на сырой трассе на 15%)',
+            'Минус: в сухую на 0,12 с/круг медленнее, разброс темпа на 5% больше',
+        ],
+        en: {
+            name: 'Rain master',
+            desc: 'Drives better in the rain than in the dry.',
+            effects: [
+                'Rain: wins back 4% of the pace lost to the weather plus another 0.1 s/lap (half of that on a damp track)',
+                'Rain: 30% fewer mistakes and contacts (15% on a damp track)',
+                'Downside: 0.12 s/lap slower in the dry, pace scatter 5% larger',
+            ],
+        },
+    },
+    rookie: {
+        name: 'Перспективный новичок',
+        desc: 'Опытность опускается до минимума, ошибок и сходов больше. Остальные показатели выше, а шансы выиграть гонку или финишировать в топ-3…5 выше, если пилот не сходит.',
+        effects: [
+            'EXP всегда 1',
+            'RAC, AWA и PAC на 8 выше',
+            'Быстрее на 0,06 с/круг: шанс на победу или топ-3…5, пока пилот на трассе',
+            'Минус: ошибок на 50% больше, тяжёлых ошибок втрое больше, сходов после них на 50% больше, контактов на 35% больше',
+        ],
+        en: {
+            name: 'Promising rookie',
+            desc: 'Experience drops to the minimum and mistakes and retirements are more frequent. The other ratings are higher, and the chances to win or to finish in the top 3-5 are better as long as the pilot does not retire.',
+            effects: [
+                'EXP is always 1',
+                'RAC, AWA and PAC are 8 higher',
+                '0.06 s/lap faster: a chance to win or finish in the top 3-5 while the pilot stays on track',
+                'Downside: 50% more mistakes, three times as many big mistakes, 50% more retirements after them, 35% more contacts',
+            ],
+        },
+    },
+    underdog: {
+        name: 'Андердог',
+        desc: 'На самом слабом болиде пелотона пилотирует лучше.',
+        effects: [
+            'Слабейшие болиды пелотона (нижние 20%, минимум один): быстрее на 0,7 с/круг, ошибок на 25% меньше, атаки на 20% успешнее',
+            'Минус: на остальных болидах на 0,05 с/круг медленнее',
+        ],
+        en: {
+            name: 'Underdog',
+            desc: 'Drives better in the weakest car of the field.',
+            effects: [
+                'Weakest cars of the field (bottom 20%, at least one): 0.7 s/lap faster, 25% fewer mistakes, attacks 20% more successful',
+                'Downside: 0.05 s/lap slower in any other car',
+            ],
+        },
+    },
+    clumsyPass: {
+        name: 'Неумелые обгоны',
+        desc: 'Пилоту сложнее обгонять, зато легче удерживать и защищать позицию.',
+        effects: [
+            'Свои атаки успешны на 35% реже, при атаке контакт на 20% вероятнее',
+            'Защита: соперники обгоняют его на 40% реже',
+            'Под давлением (соперник близко сзади) ошибок на 25% меньше',
+        ],
+        en: {
+            name: 'Clumsy overtakes',
+            desc: 'Finds it harder to overtake, but it is easier to hold and defend a position.',
+            effects: [
+                'Own attacks succeed 35% less often, a contact is 20% more likely when attacking',
+                'Defence: rivals pass him 40% less often',
+                'Under pressure (a rival close behind) 25% fewer mistakes',
+            ],
+        },
+    },
+};
+
+// English twins go into the translation dictionary (see i18n.js).
+Object.values(TRAITS).forEach(t => {
+    DICTIONARY_PAIRS.push([t.name, t.en.name], [t.desc, t.en.desc]);
+    t.effects.forEach((text, k) => DICTIONARY_PAIRS.push([text, t.en.effects[k]]));
+});
 
 /**
  * Pilot ratings, 1-99, like the stats on a driver card:
@@ -1501,11 +1683,79 @@ const PILOT_DEFAULT = { exp: 70, rac: 70, awa: 70, pac: 70 };
 const pilotRating = p => Math.round(.4 * p.pac + .25 * p.rac + .2 * p.awa + .15 * p.exp);
 
 /**
+ * Trait effects (see data/traits.js for the texts).
+ *
+ * effectivePilot(car)   ratings after the traits (the rookie trait pins EXP to 1 and lifts the other three)
+ * applyTraits(c, weak)  sets the multipliers of a simulated car c; weak = its car is among the slowest of the field
+ *
+ * Multipliers used by the simulation (all 1 = no effect):
+ *   bigMul      share of big mistakes among the mistakes
+ *   mistakeMul  chance of a mistake     crashMul  chance that a big mistake ends in a retirement
+ *   contactMul  chance of a contact     wetRisk   extra factor for mistakes and contacts in damp/rain
+ *   atkMul      success of own attacks  defMul    success of rivals attacking this car
+ *   nearMul     pressure term of the mistake chance (a rival close behind)
+ * The pace effects are added to c.pz (seconds per lap, negative = faster) and c.sd (pace scatter).
+ */
+const hasTrait = (car, id) => (car.traits || []).includes(id);
+
+function effectivePilot(car) {
+    const p = { ...car.pil };
+    if (hasTrait(car, 'rookie')) {
+        p.exp = 1;
+        p.rac = Math.min(99, p.rac + 8);
+        p.awa = Math.min(99, p.awa + 8);
+        p.pac = Math.min(99, p.pac + 8);
+    }
+    return p;
+}
+
+function applyTraits(c, weak) {
+    const car = c.c, k = TRACKS[state.tr][TRACK.LAP_TIME] / 90;        // seconds scale with the lap time
+    const wetLoss = weatherLoss(state.tr) * TRACKS[state.tr][TRACK.LAP_TIME];   // seconds per lap lost to the weather
+    const wet = state.weather == 'rain' ? 1 : state.weather == 'damp' ? .5 : 0;
+    if (hasTrait(car, 'adaptive')) {
+        c.pz -= wetLoss * .03;
+        c.wetRisk *= .8;
+        c.sd *= .85;
+        if (!wet) c.pz += .05 * k;
+    }
+    if (hasTrait(car, 'rainMaster')) {
+        c.pz -= (wetLoss * .04 + .1 * k) * wet;
+        c.wetRisk *= 1 - .3 * wet;
+        if (!wet) {
+            c.pz += .12 * k;
+            c.sd *= 1.05;
+        }
+    }
+    if (hasTrait(car, 'rookie')) {
+        c.mistakeMul *= 1.5;
+        c.crashMul *= 1.5;
+        c.bigMul *= 3;
+        c.contactMul *= 1.35;
+        c.pz -= .06 * k;
+    }
+    if (hasTrait(car, 'underdog')) {
+        if (weak) {
+            c.pz -= .7 * k;
+            c.mistakeMul *= .75;
+            c.atkMul *= 1.2;
+        } else c.pz += .05 * k;
+    }
+    if (hasTrait(car, 'clumsyPass')) {
+        c.atkMul *= .65;
+        c.defMul *= .6;
+        c.nearMul *= .75;
+        c.contactMul *= 1.2;
+    }
+}
+
+/**
  * Cars in the garage.
  * 
  * A car object (makeCar):
  *   id     unique id            s     series key: 'f1' | 'f2' | 'f19'
  *   name   optional name given by the user (shown in tables, chips and the timing tower)
+ *   traits pilot traits (ids from data/traits.js, at most MAX_TRAITS)
  *   pil    pilot ratings {exp, rac, awa, pac} 1-99 (see model/pilot.js); only used while realistic driving is on
  *   t      team index in SERIES[s].t
  *   st     [power unit, aero, chassis, reliability] 0-100
@@ -1535,7 +1785,7 @@ const carShort = c => (c.name || SERIES[c.s].t[c.t][0]).replace(/\s+/g, '').slic
 const cleanName = v => v.replace(/[<>&"']/g, '').trim().slice(0, 14);
 
 const makeCar = (s, i, name = '', pil = null) => ({
-    id: ++nextCarId, name, pil: { ...PILOT_DEFAULT, ...pil }, s, t: i, st: teamStats(s, i), su: Object.fromEntries(SETUP_PARAMS.map(d => [d[0], d[5]])), str: {
+    id: ++nextCarId, name, pil: { ...PILOT_DEFAULT, ...pil }, traits: [], s, t: i, st: teamStats(s, i), su: Object.fromEntries(SETUP_PARAMS.map(d => [d[0], d[5]])), str: {
         c: ['M', 'H'], f: [.45 + (Math.random() - .5) * .12],   // default one-stop plan; the pit lap differs a little from car to car
          fm: 'S', er: 'M', fl: null
     }
@@ -1928,7 +2178,7 @@ const carsByPace = () => state.cars.map(c => ({ c, t: testLapTime(c) })).sort((a
 // Gaps are read from these times (like real timing), not estimated from distance.
 const LOOPS = 60;
 
-const NEUTRAL_TRAITS = { pen: 0, exp: .7, rac: .7, awa: .7, pz: 0, dg: 0, pnc: false, unpl: false, out: false, outT: 0, why: '', cons: 1, ag: 1, tmg: 1, hold: 0, sd: 0, nz: 0, wt: 0, wob: 0, err: null, errN: 0, errT: 0, slow: false };
+const NEUTRAL_TRAITS = { bigMul: 1, mistakeMul: 1, crashMul: 1, contactMul: 1, atkMul: 1, defMul: 1, nearMul: 1, wetRisk: 1, pen: 0, exp: .7, rac: .7, awa: .7, pz: 0, dg: 0, pnc: false, unpl: false, out: false, outT: 0, why: '', cons: 1, ag: 1, tmg: 1, hold: 0, sd: 0, nz: 0, wt: 0, wob: 0, err: null, errN: 0, errT: 0, slow: false };
 
 // p = pilot ratings {exp, rac, awa, pac}, 1-99 (70 = baseline, see model/pilot.js):
 //   EXP  experience: stays calm under pressure, gentle on the tyres, good starts
@@ -1952,16 +2202,16 @@ function driverTraits(p) {
 // Rolled once per braking zone. Mistakes are more likely with a car close ahead (pressure) and on worn tyres.
 function driverMistakeCheck(c, ah, w, z) {
     const near = ah && ah.s - c.s < 40;
-    const p = .0025 * w * (1 + (near ? 1.2 * (1.6 - 1.2 * c.exp) : 0) + (c.wr > 85 ? 1 : 0)) * c.ag / c.cons * weatherRisk(state.tr);
+    const p = .0025 * w * (1 + (near ? 1.2 * (1.6 - 1.2 * c.exp) * c.nearMul : 0) + (c.wr > 85 ? 1 : 0)) * c.ag / c.cons * weatherRisk(state.tr) * c.mistakeMul * (state.weather == 'dry' ? 1 : c.wetRisk);
     if (Math.random() >= p) return;
     const r = Math.random();
     const wx = state.weather == 'dry' ? 1 : state.weather == 'damp' ? 1.5 : 2;   // wet weather: more big mistakes
-    const big = r < .04 * wx, wide = !big && r < .22 + .08 * (wx - 1);      // 4% off the track, 18% runs wide, the rest is a small lock-up
+    const big = r < .04 * wx * c.bigMul, wide = !big && r < .22 + .08 * (wx - 1);      // 4% off the track, 18% runs wide, the rest is a small lock-up
     c.err = big ? { t0: z.t, dur: 2.8, k: .5, lat: 8 } : wide ? { t0: z.t, dur: 1.8, k: .8, lat: 5 } : { t0: z.t, dur: 1, k: .93, lat: 0 };
     if (Math.random() < .5) c.err.lat = -c.err.lat;
     c.errN++;
     c.errT += c.err.dur * (1 - c.err.k);
-    if (state.dnf && Math.random() < (big ? .3 : wide ? .04 : 0)) {   // a big mistake can end in the barrier
+    if (state.dnf && Math.random() < (big ? .3 : wide ? .04 : 0) * c.crashMul) {   // a big mistake can end in the barrier
         retireCar(c, z, 'авария, сход с гонки', '💥');
         return;
     }
@@ -2013,7 +2263,7 @@ function damageCar(c, z, seconds, text) {
 
 // Rolled when car a starts an attack on car d.
 function contactCheck(a, d, z) {
-    const p = (state.human ? .004 * a.ag * (1.85 - 1.2 * a.awa) : .001) * (a.lp <= 1 ? 2 : 1) * weatherRisk(state.tr);
+    const p = (state.human ? .004 * a.ag * (1.85 - 1.2 * a.awa) : .001) * (a.lp <= 1 ? 2 : 1) * weatherRisk(state.tr) * a.contactMul * (state.weather == 'dry' ? 1 : a.wetRisk);
     if (Math.random() >= p) return;
     z.log.unshift(`${Math.max(1, a.lp)} кр.: ⚠️ контакт: ${carLabel(a.c)} × ${carLabel(d.c)}`);
     const r = Math.random();
@@ -2041,11 +2291,16 @@ function initSimulation() {
     // driver traits (neutral values while the realistic mode is off)
     state.sim.dnf = [];
     state.sim.cs.forEach(c => {
-        Object.assign(c, state.human ? driverTraits(c.c.pil) : NEUTRAL_TRAITS);
+        Object.assign(c, state.human ? driverTraits(effectivePilot(c.c)) : NEUTRAL_TRAITS);
         c.wf *= c.tmg;
         c.tl = new Float32Array((raceLaps() + 3) * LOOPS);   // time of passing each timing loop
         c.pi = -1;                                           // index of the last loop passed
     });
+    if (state.human) {
+        // the weakest cars of the field (bottom 20%, at least one) matter for the underdog trait
+        const cs = state.sim.cs, weakest = new Set([...cs].sort((a, b) => b.lt0 - a.lt0).slice(0, Math.max(1, Math.round(cs.length * .2))));
+        cs.forEach(c => applyTraits(c, weakest.has(c)));
+    }
 }
 
 // How much later car c passed the timing loop that `other` (ahead) passed first; null if there is no data yet.
@@ -2225,7 +2480,7 @@ function stepSimulation(dt) {
                     c.rk = bb + '|' + Math.floor(c.s / L);
                     const pa = c.m / ah.m - 1;
                     const p = Math.max(0, Math.min(.9, e * e / 25 * pf.bp[bb] * (.05 + pa * 25 + (c.dr ? .3 : 0) + (f1 && c.er > 25 ? .1 : 0))));
-                    if (Math.random() < (state.human ? p * (.8 + .4 * c.ag / 1.2) * (.7 + .6 * c.rac) * (1.2 - .4 * ah.rac) : p)) {
+                    if (Math.random() < (state.human ? p * (.8 + .4 * c.ag / 1.2) * (.7 + .6 * c.rac) * (1.2 - .4 * ah.rac) * c.atkMul * ah.defMul : p)) {
                         c.att = { t: ah, sg: pf.off[(bb + 30) % pf.n] >= 0 ? 1 : -1, t0: z.t };
                         z.log.unshift(`${Math.max(1, c.lp)} кр.: ${carLabel(c.c)} атакует ${carLabel(ah.c)}`);
                         if (state.dnf) contactCheck(c, ah, z);
@@ -2342,7 +2597,7 @@ function stepSimulation(dt) {
 
 /**
  * Compact pilot card: overall rating (RTG) on the left, four editable ratings on the right.
- * scope 'car' edits the selected car, scope 'new' is the card in the "add a car" window.
+ * Only used in the Pilots tab (scope 'draft'): the sliders edit the pilot that is being created.
  */
 const PILOT_NOTE = 'EXP — опыт · RAC — гоночное мастерство · AWA — осознанность · PAC — скорость · RTG — общий рейтинг (считается сам). Значения 1–99, действуют при включённой реалистичной езде.';
 
@@ -2358,7 +2613,10 @@ function onPilotInput(e) {
     e.nextElementSibling.textContent = e.value;
     const p = readPilotCard(card);
     card.querySelector('.rtg b').textContent = pilotRating(p);
-    if (card.dataset.scope === 'car') currentCar().pil = p;
+    if (card.dataset.scope === 'draft') {
+        draft().pil = p;
+        updateDraftPreview();
+    }
 }
 
 /**
@@ -2658,10 +2916,10 @@ function drawStands(x, E, rw, at, po, L) {
 // ---------- Болид ----------
 function renderCarTab() {
     const c = currentCar();
-    let h = `<div class="card"><h3>Добавить болид</h3><div class="mu">Имя пилота (необязательно)</div><input type="text" id="nn" maxlength="14" style="margin-bottom:8px"><div id="np">${pilotCardHtml(PILOT_DEFAULT, 'new')}</div><div class="mu" style="margin-bottom:8px">${PILOT_NOTE}</div><div class="row"><select id="ns" onchange="fillTeamSelect()">${Object.keys(SERIES).map(k => `<option value="${k}">${SERIES[k].n}</option>`).join('')}</select><select id="nm"></select><button class="pr" onclick="addCar()">＋ Добавить</button></div></div>`;
+    let h = `<div class="card"><h3>Добавить болид</h3><div class="mu">Имя пилота (необязательно)</div><input type="text" id="nn" maxlength="14" style="margin-bottom:8px"><div class="mu">Пилот</div><select id="npl" style="margin-bottom:4px">${pilotOptions('')}</select><div class="mu" style="margin-bottom:8px">Пилотов создают во вкладке «Пилоты».</div><div class="row"><select id="ns" onchange="fillTeamSelect()">${Object.keys(SERIES).map(k => `<option value="${k}">${SERIES[k].n}</option>`).join('')}</select><select id="nm"></select><button class="pr" onclick="addCar()">＋ Добавить</button></div></div>`;
     if (c) {
         const e = effectiveStats(c);
-        h += `<div class="card"><h3>${carLabel(c)}</h3><div class="mu">Имя</div><input type="text" maxlength="14" value="${c.name || ''}" onchange="renameCar(this.value)" style="margin-bottom:8px">${pilotCardHtml(c.pil, 'car')}<div class="mu" style="margin-bottom:8px">${PILOT_NOTE}</div><div class="row"><select onchange="changeTeam(+this.value)">${optionsHtml(SERIES[c.s].t.map(t => t[0]), c.t)}</select><button onclick="duplicateCar()">Копия</button><button onclick="deleteCar()">Удалить</button></div>${presetsHtml()}
+        h += `<div class="card"><h3>${carLabel(c)}</h3><div class="mu">Имя</div><input type="text" maxlength="14" value="${c.name || ''}" onchange="renameCar(this.value)" style="margin-bottom:8px">${pilotSummaryHtml(c)}<div class="row"><select onchange="changeTeam(+this.value)">${optionsHtml(SERIES[c.s].t.map(t => t[0]), c.t)}</select><button onclick="duplicateCar()">Копия</button><button onclick="deleteCar()">Удалить</button></div>${presetsHtml()}
 <p class="mu" id="inf"></p><div class="g">Характеристики болида${state.eq ? ' (равная мощность: значения команд не учитываются, настройки сохраняются)' : ''}</div>` + ['Силовая установка', 'Аэродинамика', 'Шасси', 'Надёжность'].map((n, i) => sliderHtml(n, i, e[i], 40, 100, 1, 'onStatInput', state.eq)).join('') + `<div class="row" style="margin-top:8px"><button class="pr" onclick="autoSetup()">⚙️ Подобрать настройки под трассу</button><button onclick="resetSetup()">Сбросить</button></div>`;
         for (const d of SETUP_PARAMS)
             h += (d[6] ? `<div class="g">${d[6]}</div>` : '') + sliderHtml(d[1], d[0], c.su[d[0]], d[2], d[3], d[4], 'onSetupInput');
@@ -2678,7 +2936,9 @@ function fillTeamSelect() {
 }
 
 function addCar() {
-    const c = makeCar($('ns').value, +$('nm').value, cleanName($('nn').value), readPilotCard($('np')));
+    const c = makeCar($('ns').value, +$('nm').value, cleanName($('nn').value));
+    const pilot = pilotById($('npl').value);
+    if (pilot) seatPilot(c, pilot, true);
     c.grid = 999;
     adaptStrategy(c);
     state.cars.push(c);
@@ -2915,7 +3175,7 @@ function renderTestTab() {
     const tr = TRACKS[state.tr];
     const pf = trackProfile(state.tr);
     const rs = carsByPace();
-    const key = state.tr + '|' + rs.map(q => q.c.id + ':' + q.c.grid + ':' + q.t.toFixed(3) + JSON.stringify(q.c.str) + state.pct + state.human + state.dnf + JSON.stringify(q.c.pil) + state.weather).join();
+    const key = state.tr + '|' + rs.map(q => q.c.id + ':' + q.c.grid + ':' + q.t.toFixed(3) + JSON.stringify(q.c.str) + state.pct + state.human + state.dnf + JSON.stringify(q.c.pil) + JSON.stringify(q.c.traits) + state.weather).join();
     if (state.key != key) {
         state.key = key;
         state.run = false;
@@ -3583,9 +3843,10 @@ function showCarAnalysis(i) {
         `Режим: полный газ ${(c.tf / c.tt * 100).toFixed(0)}% времени, торможение ${(c.tb / c.tt * 100).toFixed(0)}%, DRS ${c.td.toFixed(0)} с, макс. скорость ${Math.round(c.vx)} км/ч, средняя ${av.toFixed(0)} км/ч.`,
         c.c.s == 'f1' ? `ERS: потрачено ${c.eu.toFixed(0)}% заряда, рекуперировано ${c.eh.toFixed(0)}%, в конце ${Math.round(c.er)}%.` : 'У F2 нет ERS.'];
     if (state.human) {
-        const p = c.c.pil;
+        const eff = effectivePilot(c.c);
         ins.push(`Реалистичная езда: ошибок ${c.errN}, потери ≈ ${c.errT.toFixed(1)} с; разброс темпа ±${c.sd.toFixed(2)} с.`);
-        ins.push(`Пилот: RTG ${pilotRating(p)} (EXP ${p.exp} · RAC ${p.rac} · AWA ${p.awa} · PAC ${p.pac})${c.pen ? '; штрафы стюардов +' + c.pen + ' с' : ''}.`);
+        if (c.c.traits.length) ins.push('Черты: ' + c.c.traits.map(id => TRAITS[id].name).join(', ') + '.');
+        ins.push(`Пилот: RTG ${pilotRating(effectivePilot(c.c))} (EXP ${eff.exp} · RAC ${eff.rac} · AWA ${eff.awa} · PAC ${eff.pac})${c.pen ? '; штрафы стюардов +' + c.pen + ' с' : ''}.`);
     }
     if (c.out) ins.unshift(`✖ Сход на круге ${Math.max(1, c.lp)}: ${c.why}.`);
     $('rb2').innerHTML = `<ul style="padding-left:18px;margin:8px 0">${ins.map(t => '<li>' + t + '</li>').join('')}</ul><div class="mu">Время круга (пики пит-стопов обрезаны), фон — шины</div><canvas id="rc1" style="height:150px"></canvas><div class="mu">Позиция по кругам</div><canvas id="rc2" style="height:120px"></canvas>${c.ps.length ? `<table><tr><th>Стоп</th><th>Круг</th><th>Питлейн</th><th>Стоянка</th><th>Шины</th></tr>${c.ps.map((p, j) => `<tr><td>${j + 1}</td><td>${p.lap - 1}</td><td>${p.pl.toFixed(2)} с</td><td>${p.st.toFixed(2)} с</td><td>${TYRES[p.comp].n}</td></tr>`).join('')}</table>` : ''}`;
@@ -3632,6 +3893,143 @@ function showCarAnalysis(i) {
 }
 
 /**
+ * "Pilots" tab: character creation. A pilot has a name, four ratings (EXP, RAC, AWA, PAC) and up to three traits.
+ * Created pilots are kept in a library (localStorage; memory only if the browser blocks storage) and can be seated
+ * in a car from this tab or from the car tab. Seating copies the pilot into the car, so later edits of the library
+ * do not change cars that are already set up.
+ */
+const PILOTS_KEY = 'f1-engineer-pilots';
+let pilotFallback = [];
+let pilotMessage = '';
+
+function loadPilots() {
+    try {
+        return JSON.parse(localStorage.getItem(PILOTS_KEY)) || [];
+    } catch (e) {
+        return pilotFallback;
+    }
+}
+
+function storePilots(list) {
+    pilotFallback = list;
+    try {
+        localStorage.setItem(PILOTS_KEY, JSON.stringify(list));
+    } catch (e) { /* memory only */ }
+}
+
+const pilotById = id => loadPilots().find(p => p.id == id);
+const newDraft = () => ({ id: 0, name: '', pil: { ...PILOT_DEFAULT }, traits: [] });
+const draft = () => state.draft || (state.draft = newDraft());
+const cleanTraits = ids => [...new Set(ids.filter(id => TRAITS[id]))].slice(0, MAX_TRAITS);
+
+// Seats a library pilot in a car. The car keeps its own name when keepName is true and it has one.
+function seatPilot(car, p, keepName) {
+    if (!(keepName && car.name) && p.name) car.name = p.name;
+    car.pil = { ...p.pil };
+    car.traits = cleanTraits(p.traits);
+}
+
+const traitChips = ids => ids.length ? ids.map(id => `<span class="tchip" title="${TRAITS[id].desc}">${TRAITS[id].name}</span>`).join('') : '<span class="mu">Нет черт</span>';
+
+const pilotOptions = selected => '<option value="">Стандартный пилот (70)</option>' + loadPilots().map(p => `<option value="${p.id}"${p.id == selected ? ' selected' : ''}>${p.name} · RTG ${pilotRating(p.pil)}</option>`).join('');
+
+// Short pilot summary with a selector, shown in the car card of the car tab.
+function pilotSummaryHtml(car) {
+    const p = effectivePilot(car);
+    return `<div class="pilot"><div class="rtg"><b>${pilotRating(p)}</b><small>RTG</small></div><div class="pst"><div class="mu">EXP ${p.exp} · RAC ${p.rac} · AWA ${p.awa} · PAC ${p.pac}</div><div>${traitChips(car.traits || [])}</div></div></div>
+<div class="row" style="margin-bottom:4px"><select id="cpl">${pilotOptions('')}</select><button onclick="seatSelectedPilot()">Посадить пилота</button></div>
+<div class="mu" style="margin-bottom:8px">Пилотов создают во вкладке «Пилоты».</div>`;
+}
+
+function seatSelectedPilot() {
+    const p = pilotById($('cpl').value);
+    Object.assign(currentCar(), p ? {} : { pil: { ...PILOT_DEFAULT }, traits: [] });
+    if (p) seatPilot(currentCar(), p, false);
+    renderCarTab();
+}
+
+// ---------- the tab ----------
+function traitInfoHtml(ids) {
+    return ids.map(id => `<div class="trait"><b>${TRAITS[id].name}</b><div class="mu">${TRAITS[id].desc}</div><ul>${TRAITS[id].effects.map(e => `<li>${e}</li>`).join('')}</ul></div>`).join('');
+}
+
+function draftPreviewHtml() {
+    const d = draft(), p = effectivePilot(d);
+    return d.traits.length ? `Эффективные значения с чертами: EXP ${p.exp} · RAC ${p.rac} · AWA ${p.awa} · PAC ${p.pac} · RTG ${pilotRating(p)}` : '';
+}
+
+function updateDraftPreview() {
+    $('peff').textContent = draftPreviewHtml();
+}
+
+function renderPilotsTab() {
+    const d = draft(), list = loadPilots(), msg = pilotMessage;
+    pilotMessage = '';
+    const slots = [0, 1, 2].map(k => `<select onchange="setTraitSlot(${k}, this.value)"><option value="">— пусто —</option>${Object.entries(TRAITS).map(([id, t]) => `<option value="${id}"${d.traits[k] == id ? ' selected' : ''}>${t.name}</option>`).join('')}</select>`).join('');
+    const rows = list.map(p => `<div class="prow"><div><b>${p.name}</b> <span class="mu">RTG ${pilotRating(p.pil)} · EXP ${p.pil.exp} · RAC ${p.pil.rac} · AWA ${p.pil.awa} · PAC ${p.pil.pac}</span><div>${traitChips(p.traits)}</div></div><div class="pbtn"><button onclick="editPilot(${p.id})">✏️</button><button onclick="seatLibraryPilot(${p.id})">🏎 В болид</button><button onclick="deletePilot(${p.id})">🗑</button></div></div>`).join('');
+    $('m').innerHTML = `<div class="card"><h3>Создание пилота</h3>
+<div class="mu">Имя пилота</div><input type="text" maxlength="14" value="${d.name}" oninput="draft().name = cleanName(this.value)" style="margin-bottom:8px">
+${pilotCardHtml(d.pil, 'draft')}
+<div class="mu">${PILOT_NOTE}</div>
+<div class="g">Черты (до 3)</div><div class="row">${slots}</div>
+${traitInfoHtml(d.traits)}
+<div class="mu" id="peff">${draftPreviewHtml()}</div>
+<div class="row" style="margin-top:8px"><button class="pr" onclick="savePilot()">💾 Сохранить пилота</button><button onclick="newPilot()">Новый пилот</button></div>
+<div class="mu">${msg}</div></div>
+<div class="card"><h3>Мои пилоты</h3>${rows || '<div class="mu">Пока нет сохранённых пилотов.</div>'}</div>`;
+}
+
+function setTraitSlot(k, id) {
+    const d = draft(), t = [...d.traits];
+    t[k] = id || undefined;
+    d.traits = cleanTraits(t);
+    renderPilotsTab();
+}
+
+function savePilot() {
+    const d = draft(), list = loadPilots();
+    const p = { id: d.id || Date.now(), name: cleanName(d.name) || 'Пилот', pil: { ...d.pil }, traits: cleanTraits(d.traits) };
+    d.id = p.id;
+    d.name = p.name;
+    storePilots(list.some(x => x.id == p.id) ? list.map(x => x.id == p.id ? p : x) : [...list, p]);
+    pilotMessage = 'Пилот сохранён: ' + p.name;
+    renderPilotsTab();
+}
+
+function newPilot() {
+    state.draft = newDraft();
+    renderPilotsTab();
+}
+
+function editPilot(id) {
+    const p = pilotById(id);
+    if (!p) return;
+    state.draft = { id: p.id, name: p.name, pil: { ...p.pil }, traits: cleanTraits(p.traits) };
+    renderPilotsTab();
+    window.scrollTo(0, 0);
+}
+
+function deletePilot(id) {
+    const p = pilotById(id);
+    if (!p) return;
+    storePilots(loadPilots().filter(x => x.id != id));
+    if (draft().id == id) draft().id = 0;
+    pilotMessage = 'Пилот удалён: ' + p.name;
+    renderPilotsTab();
+}
+
+// Seats the library pilot in the selected car (chips at the top choose the car).
+function seatLibraryPilot(id) {
+    const p = pilotById(id), car = state.cars[state.a];
+    pilotMessage = car ? p.name + ' — посажен в болид ' : 'Нет болидов — сначала добавьте болид во вкладке «Болид».';
+    if (car) {
+        seatPilot(car, p, false);
+        pilotMessage += carLabel(car);
+    }
+    render();
+}
+
+/**
  * UI helpers and tab switching.
  */
 
@@ -3647,7 +4045,7 @@ const sliderHtml = (l, k, v, a, b, s, fn, dis) => `<label class="sl"><span>${l}<
 const optionsHtml = (a, sel) => a.map((x, i) => `<option value="${i}"${i == sel ? ' selected' : ''}>${x}</option>`).join('');
 
 // ---------- Общее ----------
-const TAB_RENDERERS = [renderCarTab, renderStrategyTab, renderTestTab];
+const TAB_RENDERERS = [renderCarTab, renderStrategyTab, renderTestTab, renderPilotsTab];
 
 function render() {
     applyTyreAllocation();

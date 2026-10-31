@@ -8,7 +8,7 @@ function renderTestTab() {
     const tr = TRACKS[state.tr];
     const pf = trackProfile(state.tr);
     const rs = carsByPace();
-    const key = state.tr + '|' + rs.map(q => q.c.id + ':' + q.c.grid + ':' + q.t.toFixed(3) + JSON.stringify(q.c.str) + state.pct + state.human + state.dnf + JSON.stringify(q.c.pil) + state.weather).join();
+    const key = state.tr + '|' + rs.map(q => q.c.id + ':' + q.c.grid + ':' + q.t.toFixed(3) + JSON.stringify(q.c.str) + state.pct + state.human + state.dnf + JSON.stringify(q.c.pil) + JSON.stringify(q.c.traits) + state.weather).join();
     if (state.key != key) {
         state.key = key;
         state.run = false;

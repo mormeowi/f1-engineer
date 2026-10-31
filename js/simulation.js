@@ -33,7 +33,7 @@ const carsByPace = () => state.cars.map(c => ({ c, t: testLapTime(c) })).sort((a
 // Gaps are read from these times (like real timing), not estimated from distance.
 const LOOPS = 60;
 
-const NEUTRAL_TRAITS = { pen: 0, exp: .7, rac: .7, awa: .7, pz: 0, dg: 0, pnc: false, unpl: false, out: false, outT: 0, why: '', cons: 1, ag: 1, tmg: 1, hold: 0, sd: 0, nz: 0, wt: 0, wob: 0, err: null, errN: 0, errT: 0, slow: false };
+const NEUTRAL_TRAITS = { bigMul: 1, mistakeMul: 1, crashMul: 1, contactMul: 1, atkMul: 1, defMul: 1, nearMul: 1, wetRisk: 1, pen: 0, exp: .7, rac: .7, awa: .7, pz: 0, dg: 0, pnc: false, unpl: false, out: false, outT: 0, why: '', cons: 1, ag: 1, tmg: 1, hold: 0, sd: 0, nz: 0, wt: 0, wob: 0, err: null, errN: 0, errT: 0, slow: false };
 
 // p = pilot ratings {exp, rac, awa, pac}, 1-99 (70 = baseline, see model/pilot.js):
 //   EXP  experience: stays calm under pressure, gentle on the tyres, good starts
@@ -57,16 +57,16 @@ function driverTraits(p) {
 // Rolled once per braking zone. Mistakes are more likely with a car close ahead (pressure) and on worn tyres.
 function driverMistakeCheck(c, ah, w, z) {
     const near = ah && ah.s - c.s < 40;
-    const p = .0025 * w * (1 + (near ? 1.2 * (1.6 - 1.2 * c.exp) : 0) + (c.wr > 85 ? 1 : 0)) * c.ag / c.cons * weatherRisk(state.tr);
+    const p = .0025 * w * (1 + (near ? 1.2 * (1.6 - 1.2 * c.exp) * c.nearMul : 0) + (c.wr > 85 ? 1 : 0)) * c.ag / c.cons * weatherRisk(state.tr) * c.mistakeMul * (state.weather == 'dry' ? 1 : c.wetRisk);
     if (Math.random() >= p) return;
     const r = Math.random();
     const wx = state.weather == 'dry' ? 1 : state.weather == 'damp' ? 1.5 : 2;   // wet weather: more big mistakes
-    const big = r < .04 * wx, wide = !big && r < .22 + .08 * (wx - 1);      // 4% off the track, 18% runs wide, the rest is a small lock-up
+    const big = r < .04 * wx * c.bigMul, wide = !big && r < .22 + .08 * (wx - 1);      // 4% off the track, 18% runs wide, the rest is a small lock-up
     c.err = big ? { t0: z.t, dur: 2.8, k: .5, lat: 8 } : wide ? { t0: z.t, dur: 1.8, k: .8, lat: 5 } : { t0: z.t, dur: 1, k: .93, lat: 0 };
     if (Math.random() < .5) c.err.lat = -c.err.lat;
     c.errN++;
     c.errT += c.err.dur * (1 - c.err.k);
-    if (state.dnf && Math.random() < (big ? .3 : wide ? .04 : 0)) {   // a big mistake can end in the barrier
+    if (state.dnf && Math.random() < (big ? .3 : wide ? .04 : 0) * c.crashMul) {   // a big mistake can end in the barrier
         retireCar(c, z, 'авария, сход с гонки', '💥');
         return;
     }
@@ -118,7 +118,7 @@ function damageCar(c, z, seconds, text) {
 
 // Rolled when car a starts an attack on car d.
 function contactCheck(a, d, z) {
-    const p = (state.human ? .004 * a.ag * (1.85 - 1.2 * a.awa) : .001) * (a.lp <= 1 ? 2 : 1) * weatherRisk(state.tr);
+    const p = (state.human ? .004 * a.ag * (1.85 - 1.2 * a.awa) : .001) * (a.lp <= 1 ? 2 : 1) * weatherRisk(state.tr) * a.contactMul * (state.weather == 'dry' ? 1 : a.wetRisk);
     if (Math.random() >= p) return;
     z.log.unshift(`${Math.max(1, a.lp)} кр.: ⚠️ контакт: ${carLabel(a.c)} × ${carLabel(d.c)}`);
     const r = Math.random();
@@ -146,11 +146,16 @@ function initSimulation() {
     // driver traits (neutral values while the realistic mode is off)
     state.sim.dnf = [];
     state.sim.cs.forEach(c => {
-        Object.assign(c, state.human ? driverTraits(c.c.pil) : NEUTRAL_TRAITS);
+        Object.assign(c, state.human ? driverTraits(effectivePilot(c.c)) : NEUTRAL_TRAITS);
         c.wf *= c.tmg;
         c.tl = new Float32Array((raceLaps() + 3) * LOOPS);   // time of passing each timing loop
         c.pi = -1;                                           // index of the last loop passed
     });
+    if (state.human) {
+        // the weakest cars of the field (bottom 20%, at least one) matter for the underdog trait
+        const cs = state.sim.cs, weakest = new Set([...cs].sort((a, b) => b.lt0 - a.lt0).slice(0, Math.max(1, Math.round(cs.length * .2))));
+        cs.forEach(c => applyTraits(c, weakest.has(c)));
+    }
 }
 
 // How much later car c passed the timing loop that `other` (ahead) passed first; null if there is no data yet.
@@ -330,7 +335,7 @@ function stepSimulation(dt) {
                     c.rk = bb + '|' + Math.floor(c.s / L);
                     const pa = c.m / ah.m - 1;
                     const p = Math.max(0, Math.min(.9, e * e / 25 * pf.bp[bb] * (.05 + pa * 25 + (c.dr ? .3 : 0) + (f1 && c.er > 25 ? .1 : 0))));
-                    if (Math.random() < (state.human ? p * (.8 + .4 * c.ag / 1.2) * (.7 + .6 * c.rac) * (1.2 - .4 * ah.rac) : p)) {
+                    if (Math.random() < (state.human ? p * (.8 + .4 * c.ag / 1.2) * (.7 + .6 * c.rac) * (1.2 - .4 * ah.rac) * c.atkMul * ah.defMul : p)) {
                         c.att = { t: ah, sg: pf.off[(bb + 30) % pf.n] >= 0 ? 1 : -1, t0: z.t };
                         z.log.unshift(`${Math.max(1, c.lp)} кр.: ${carLabel(c.c)} атакует ${carLabel(ah.c)}`);
                         if (state.dnf) contactCheck(c, ah, z);

@@ -52,9 +52,10 @@ function showCarAnalysis(i) {
         `Режим: полный газ ${(c.tf / c.tt * 100).toFixed(0)}% времени, торможение ${(c.tb / c.tt * 100).toFixed(0)}%, DRS ${c.td.toFixed(0)} с, макс. скорость ${Math.round(c.vx)} км/ч, средняя ${av.toFixed(0)} км/ч.`,
         c.c.s == 'f1' ? `ERS: потрачено ${c.eu.toFixed(0)}% заряда, рекуперировано ${c.eh.toFixed(0)}%, в конце ${Math.round(c.er)}%.` : 'У F2 нет ERS.'];
     if (state.human) {
-        const p = c.c.pil;
+        const eff = effectivePilot(c.c);
         ins.push(`Реалистичная езда: ошибок ${c.errN}, потери ≈ ${c.errT.toFixed(1)} с; разброс темпа ±${c.sd.toFixed(2)} с.`);
-        ins.push(`Пилот: RTG ${pilotRating(p)} (EXP ${p.exp} · RAC ${p.rac} · AWA ${p.awa} · PAC ${p.pac})${c.pen ? '; штрафы стюардов +' + c.pen + ' с' : ''}.`);
+        if (c.c.traits.length) ins.push('Черты: ' + c.c.traits.map(id => TRAITS[id].name).join(', ') + '.');
+        ins.push(`Пилот: RTG ${pilotRating(effectivePilot(c.c))} (EXP ${eff.exp} · RAC ${eff.rac} · AWA ${eff.awa} · PAC ${eff.pac})${c.pen ? '; штрафы стюардов +' + c.pen + ' с' : ''}.`);
     }
     if (c.out) ins.unshift(`✖ Сход на круге ${Math.max(1, c.lp)}: ${c.why}.`);
     $('rb2').innerHTML = `<ul style="padding-left:18px;margin:8px 0">${ins.map(t => '<li>' + t + '</li>').join('')}</ul><div class="mu">Время круга (пики пит-стопов обрезаны), фон — шины</div><canvas id="rc1" style="height:150px"></canvas><div class="mu">Позиция по кругам</div><canvas id="rc2" style="height:120px"></canvas>${c.ps.length ? `<table><tr><th>Стоп</th><th>Круг</th><th>Питлейн</th><th>Стоянка</th><th>Шины</th></tr>${c.ps.map((p, j) => `<tr><td>${j + 1}</td><td>${p.lap - 1}</td><td>${p.pl.toFixed(2)} с</td><td>${p.st.toFixed(2)} с</td><td>${TYRES[p.comp].n}</td></tr>`).join('')}</table>` : ''}`;

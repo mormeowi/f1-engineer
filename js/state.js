@@ -16,6 +16,7 @@
  *   cam    true = camera follows the selected car, false = whole track
  *   z      camera zoom factor
  *   lang   'ru' or 'en'
+ *   draft  pilot being edited in the Pilots tab
  *   weather 'dry' | 'damp' | 'rain' (model/weather.js)
  *   theme  'sys' | 'white' | 'black'
  *   volume master volume 0-100 (settings menu)

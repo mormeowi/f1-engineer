@@ -4,6 +4,7 @@
  * A car object (makeCar):
  *   id     unique id            s     series key: 'f1' | 'f2' | 'f19'
  *   name   optional name given by the user (shown in tables, chips and the timing tower)
+ *   traits pilot traits (ids from data/traits.js, at most MAX_TRAITS)
  *   pil    pilot ratings {exp, rac, awa, pac} 1-99 (see model/pilot.js); only used while realistic driving is on
  *   t      team index in SERIES[s].t
  *   st     [power unit, aero, chassis, reliability] 0-100
@@ -33,7 +34,7 @@ const carShort = c => (c.name || SERIES[c.s].t[c.t][0]).replace(/\s+/g, '').slic
 const cleanName = v => v.replace(/[<>&"']/g, '').trim().slice(0, 14);
 
 const makeCar = (s, i, name = '', pil = null) => ({
-    id: ++nextCarId, name, pil: { ...PILOT_DEFAULT, ...pil }, s, t: i, st: teamStats(s, i), su: Object.fromEntries(SETUP_PARAMS.map(d => [d[0], d[5]])), str: {
+    id: ++nextCarId, name, pil: { ...PILOT_DEFAULT, ...pil }, traits: [], s, t: i, st: teamStats(s, i), su: Object.fromEntries(SETUP_PARAMS.map(d => [d[0], d[5]])), str: {
         c: ['M', 'H'], f: [.45 + (Math.random() - .5) * .12],   // default one-stop plan; the pit lap differs a little from car to car
          fm: 'S', er: 'M', fl: null
     }

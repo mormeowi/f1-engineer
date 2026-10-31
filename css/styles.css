@@ -657,3 +657,53 @@ body.wide header button {
 .srow input[type=range] {
   accent-color: var(--ac);
 }
+
+/* ---- Pilots tab ---- */
+.tchip {
+  display: inline-block;
+  margin: 3px 3px 0 0;
+  padding: 2px 8px;
+  font-size: 11px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 999px;
+}
+
+.trait {
+  margin: 6px 0;
+  padding: 6px 10px;
+  background: var(--bg);
+  border: 1px solid var(--ln);
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.trait ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.prow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln);
+}
+
+.pbtn {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.pbtn button {
+  padding: 4px 8px;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+nav button {
+  font-size: 13px;
+}

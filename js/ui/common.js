@@ -14,7 +14,7 @@ const sliderHtml = (l, k, v, a, b, s, fn, dis) => `<label class="sl"><span>${l}<
 const optionsHtml = (a, sel) => a.map((x, i) => `<option value="${i}"${i == sel ? ' selected' : ''}>${x}</option>`).join('');
 
 // ---------- Общее ----------
-const TAB_RENDERERS = [renderCarTab, renderStrategyTab, renderTestTab];
+const TAB_RENDERERS = [renderCarTab, renderStrategyTab, renderTestTab, renderPilotsTab];
 
 function render() {
     applyTyreAllocation();
