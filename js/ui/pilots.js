@@ -71,13 +71,13 @@ function updateDraftPreview() {
 function renderPilotsTab() {
     const d = draft(), list = loadPilots(), msg = pilotMessage;
     pilotMessage = '';
-    const slots = [0, 1, 2].map(k => `<select onchange="setTraitSlot(${k}, this.value)"><option value="">— пусто —</option>${Object.entries(TRAITS).map(([id, t]) => `<option value="${id}"${d.traits[k] == id ? ' selected' : ''}>${t.name}</option>`).join('')}</select>`).join('');
+    const slots = [0, 1].map(k => `<select onchange="setTraitSlot(${k}, this.value)"><option value="">— пусто —</option>${Object.entries(TRAITS).map(([id, t]) => `<option value="${id}"${d.traits[k] == id ? ' selected' : ''}>${t.name}</option>`).join('')}</select>`).join('');
     const rows = list.map(p => `<div class="prow"><div><b>${p.name}</b> <span class="mu">RTG ${pilotRating(p.pil)} · EXP ${p.pil.exp} · RAC ${p.pil.rac} · AWA ${p.pil.awa} · PAC ${p.pil.pac}</span><div>${traitChips(p.traits)}</div></div><div class="pbtn"><button onclick="editPilot(${p.id})">✏️</button><button onclick="seatLibraryPilot(${p.id})">🏎 В болид</button><button onclick="deletePilot(${p.id})">🗑</button></div></div>`).join('');
     $('m').innerHTML = `<div class="card"><h3>Создание пилота</h3>
 <div class="mu">Имя пилота</div><input type="text" maxlength="14" value="${d.name}" oninput="draft().name = cleanName(this.value)" style="margin-bottom:8px">
 ${pilotCardHtml(d.pil, 'draft')}
 <div class="mu">${PILOT_NOTE}</div>
-<div class="g">Черты (до 3)</div><div class="row">${slots}</div>
+<div class="g">Черты (до 2)</div><div class="row">${slots}</div>
 ${traitInfoHtml(d.traits)}
 <div class="mu" id="peff">${draftPreviewHtml()}</div>
 <div class="row" style="margin-top:8px"><button class="pr" onclick="savePilot()">💾 Сохранить пилота</button><button onclick="newPilot()">Новый пилот</button></div>
