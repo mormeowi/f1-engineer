@@ -4,7 +4,7 @@
  *   name / desc / effects   texts of the Russian interface
  *   en                      the English twin of the same texts (added to the translation dictionary below)
  */
-const MAX_TRAITS = 3;
+const MAX_TRAITS = 2;
 
 const TRAITS = {
     adaptive: {
