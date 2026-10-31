@@ -1,5 +1,57 @@
 /* F1 2020 Race Engineer - styles. Colours are CSS variables on :root; the dark theme redefines them. */
 
+
+/* fonts */
+@font-face {
+  font-family: 'imb_3270';
+  src: url('../fonts/3270-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Titillium Web (Local .ttf files) */
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('../fonts/titilliumwebrusbydaymarius_light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('../fonts/titilliumwebrusbydaymarius_rg.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('../fonts/titilliumwebrusbydaymarius_sm.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('../fonts/titilliumwebrusbydaymarius_bd.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Titillium Web';
+  src: url('../fonts/titilliumwebrusbydaymarius_ex.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 :root {
   --bg:#f2f3f6;
   --fg:#14161b;
@@ -7,6 +59,11 @@
   --mu:#6b7280;
   --ln:#dfe2e8;
   --ac:#e10600;
+  
+  /* Обновили переменные шрифтов */
+  --font-ui: 'Titillium Web', system-ui, -apple-system, sans-serif;
+  --font-mono: 'imb_3270', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -45,7 +102,7 @@ body {
   margin:0;
   background:var(--bg);
   color:var(--fg);
-  font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font:15px/1.4 var(--font-ui); /* Основной шрифт теперь Titillium Web */
   padding-bottom:70px;
 }
 
@@ -193,6 +250,7 @@ table {
   border-collapse:collapse;
   font-size:13px;
   font-variant-numeric:tabular-nums;
+  font-family: var(--font-mono); /* Таблицы оставляем моноширинными */
 }
 
 td,th {
@@ -249,6 +307,7 @@ nav button.on {
   font-size:26px;
   font-weight:700;
   font-variant-numeric:tabular-nums;
+  font-family: var(--font-mono); /* Большие цифры моноширинные */
 }
 
 .bar {
@@ -408,7 +467,7 @@ input[type=text] {
   padding: 7px 12px;
   background: linear-gradient(90deg, #14171e, #0b0d12);
   color: #fff;
-  font: 700 13px/1 system-ui, sans-serif;
+  font: 700 13px/1 var(--font-ui);
   letter-spacing: .06em;
   text-transform: uppercase;
 }
@@ -431,7 +490,7 @@ input[type=text] {
   top: 8px;
   width: 140px;
   color: #fff;
-  font: 600 11px/1 system-ui, sans-serif;
+  font: 600 11px/1 var(--font-mono);
   background: rgba(11, 13, 18, .82);
   border-radius: 8px;
   overflow: hidden;
